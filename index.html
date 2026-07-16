@@ -649,6 +649,29 @@
         </div>
     </div>
 
+    <!-- MODAL 3: OPÇÕES DE CONCLUSÃO DE ESTUDO DO CRONOGRAMA -->
+    <div class="modal-overlay" id="modal-crono-choices">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Dia Concluído!</h3>
+                <button class="modal-close" onclick="closeModal('modal-crono-choices')">&times;</button>
+            </div>
+            <div class="modal-body text-center" style="padding: 24px; text-align: center;">
+                <i class="fa-solid fa-circle-check" style="font-size: 54px; color: var(--success); margin-bottom: 16px; display: block;"></i>
+                <p style="margin-bottom: 24px; font-size: 14px; color: var(--text-secondary); line-height: 1.5;">
+                    O dia foi marcado como concluído no seu cronograma e no edital.<br>
+                    <strong>Deseja registrar o tempo de estudo e questões de qual matéria agora?</strong>
+                </p>
+                <div class="crono-choice-buttons" style="display: flex; flex-direction: column; gap: 12px;" id="crono-choice-buttons-container">
+                    <!-- Inserido dinamicamente via JS -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-block" onclick="closeModal('modal-crono-choices')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- TELA DE BLOQUEIO / PIN LOGIN OVERLAY -->
     <div class="login-overlay active" id="login-overlay">
         <div class="login-container">

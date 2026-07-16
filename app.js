@@ -585,14 +585,18 @@ function renderTodayPlan() {
         
         // Atualiza o estado do botão de conclusão do dia
         const btn = document.getElementById("btn-conclude-day");
+        btn.disabled = false;
         if (todayPlan.completed) {
-            btn.innerHTML = `<i class="fa-solid fa-circle-check"></i> Dia Concluído!`;
-            btn.className = "btn btn-secondary btn-block";
-            btn.disabled = true;
+            btn.innerHTML = `
+                <span class="text-completed"><i class="fa-solid fa-circle-check"></i> Dia Concluído!</span>
+                <span class="text-hover-undo"><i class="fa-solid fa-rotate-left"></i> Desfazer Dia</span>
+            `;
+            btn.className = "btn btn-secondary btn-block btn-crono-completed-toggle";
+            btn.setAttribute("data-action", "undo");
         } else {
             btn.innerHTML = `<i class="fa-solid fa-check-double"></i> Concluir Dia do Ciclo`;
             btn.className = "btn btn-primary btn-block";
-            btn.disabled = false;
+            btn.setAttribute("data-action", "conclude");
         }
     } else {
         list.innerHTML = `
@@ -1793,28 +1797,14 @@ function initForms() {
     // Botão Concluir Dia do Ciclo
     document.getElementById("btn-conclude-day").addEventListener("click", async () => {
         const todayStr = new Date().toLocaleDateString('pt-BR');
+        const btn = document.getElementById("btn-conclude-day");
+        const action = btn.getAttribute("data-action");
         
-        if (state.mode === "synced" && state.apiUrl) {
-            try {
-                await fetch(state.apiUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'updateCrono', date: todayStr, completed: true })
-                });
-            } catch (e) { console.error(e); }
+        if (action === "undo") {
+            await handleUnconcludeCronoDay(todayStr);
         } else {
-            // Local update
-            const find = state.crono.find(c => {
-                const cDate = c.date instanceof Date ? c.date.toLocaleDateString('pt-BR') : String(c.date).split(" ")[0];
-                return formatDateString(cDate) === todayStr;
-            });
-            if (find) find.completed = true;
-            saveLocalDataToStorage();
+            await handleConcludeCronoDay(todayStr);
         }
-        
-        alert("Ciclo diário marcado como concluído! Ótimo trabalho!");
-        refreshData();
     });
 
     // Botões de Dados Demo / Limpar Local
@@ -2419,7 +2409,47 @@ async function handleConcludeCronoDay(dateStr) {
     // Atualiza a tela
     processDataAndRender();
     
-    alert(`Dia ${dateStr} concluído! Tópicos marcados como estudados no edital.`);
+    // Configura os botões de escolha no modal de conclusões
+    const container = document.getElementById("crono-choice-buttons-container");
+    if (container) {
+        container.innerHTML = "";
+        
+        // Botão para M1
+        const btnM1 = document.createElement("button");
+        btnM1.className = "btn btn-primary btn-block";
+        btnM1.type = "button";
+        btnM1.innerHTML = `<i class="fa-solid fa-book"></i> Registrar: ${find.m1}`;
+        btnM1.onclick = () => {
+            closeModal('modal-crono-choices');
+            openStudyLogPrefilled(dateStr, find.m1, find.a1);
+        };
+        container.appendChild(btnM1);
+        
+        // Botão para M2
+        if (hasM2) {
+            const btnM2 = document.createElement("button");
+            btnM2.className = "btn btn-secondary btn-block";
+            btnM2.type = "button";
+            btnM2.innerHTML = `<i class="fa-solid fa-book"></i> Registrar: ${find.m2}`;
+            btnM2.onclick = () => {
+                closeModal('modal-crono-choices');
+                openStudyLogPrefilled(dateStr, find.m2, find.a2);
+            };
+            container.appendChild(btnM2);
+        }
+        
+        // Botão apenas concluir
+        const btnOnly = document.createElement("button");
+        btnOnly.className = "btn btn-outline btn-block";
+        btnOnly.type = "button";
+        btnOnly.innerHTML = `<i class="fa-solid fa-check"></i> Apenas Marcar Concluído`;
+        btnOnly.onclick = () => {
+            closeModal('modal-crono-choices');
+        };
+        container.appendChild(btnOnly);
+    }
+    
+    openModal('modal-crono-choices');
 }
 
 async function handleUnconcludeCronoDay(dateStr) {
