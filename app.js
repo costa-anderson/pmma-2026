@@ -2501,13 +2501,38 @@ async function handleUnconcludeCronoDay(dateStr) {
     
     find.completed = false;
     
+    // Marca matérias do dia como não estudadas no edital
+    const t1 = state.edital.find(x => x.subject === find.m1 && x.topic === find.a1);
+    if (t1) t1.studied = false;
+    
+    let hasM2 = find.m2 && find.m2 !== "DESCANSO" && find.m2 !== "REVISÃO SEMANAL";
+    if (hasM2) {
+        const t2 = state.edital.find(x => x.subject === find.m2 && x.topic === find.a2);
+        if (t2) t2.studied = false;
+    }
+    
     // Salva
     if (state.mode === "synced" && state.apiUrl) {
         try {
+            // 1. Atualiza cronograma no Sheets
             await fetch(state.apiUrl, {
                 method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'updateCrono', date: dateStr, completed: false })
             });
+            
+            // 2. Atualiza edital M1
+            await fetch(state.apiUrl, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'toggleEdital', subject: find.m1, topic: find.a1, studied: false })
+            });
+            
+            // 3. Atualiza edital M2 (se houver)
+            if (hasM2) {
+                await fetch(state.apiUrl, {
+                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'toggleEdital', subject: find.m2, topic: find.a2, studied: false })
+                });
+            }
         } catch (e) {
             console.error("Erro ao desfazer conclusão na nuvem:", e);
         }
@@ -2517,7 +2542,7 @@ async function handleUnconcludeCronoDay(dateStr) {
     
     // Atualiza a tela
     processDataAndRender();
-    alert(`Dia ${dateStr} redefinido para 'A Estudar'.`);
+    alert(`Dia ${dateStr} redefinido para 'A Estudar' e tópicos do dia marcados como 'Não Estudados'.`);
 }
 
 function toggleCronoFilterButton(activeId) {
