@@ -1,0 +1,4 @@
+# Ignorar arquivos temporários e de bloqueio do Excel
+~$*
+.DS_Store
+Thumbs.db
