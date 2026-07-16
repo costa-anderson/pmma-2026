@@ -219,11 +219,9 @@ function startCountdown() {
         }
         
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         
         document.getElementById("countdown-timer").innerText = 
-            `FALTAM ${days} DIAS, ${hours}H e ${minutes}MIN PARA A PROVA`;
+            `FALTAM ${days} DIAS PARA A PROVA`;
     }
     
     updateClock();
@@ -2215,6 +2213,31 @@ function renderCronograma() {
             m1ActionHtml = `<button class="btn btn-outline btn-sm" style="padding: 2px 6px; font-size: 10px; margin-left: 8px;" onclick="openStudyLogPrefilled('${dateStr}', '${c.m1.replace(/'/g, "\\'")}', '${c.a1.replace(/'/g, "\\'")}')"><i class="fa-solid fa-plus"></i> Estudar</button>`;
         }
         
+        // Calcular progresso do dia baseado nos tópicos do edital
+        let totalSubjects = 0;
+        let studiedSubjects = 0;
+        if (c.m1 && c.m1 !== "DESCANSO" && c.m1 !== "REVISÃO SEMANAL") {
+            totalSubjects++;
+            if (t1Studied) studiedSubjects++;
+        }
+        if (c.m2 && c.m2 !== "DESCANSO" && c.m2 !== "REVISÃO SEMANAL") {
+            totalSubjects++;
+            const t2 = state.edital.find(x => x.subject === c.m2 && x.topic === c.a2);
+            if (t2 && t2.studied) studiedSubjects++;
+        }
+        
+        let pctHtml = "";
+        if (totalSubjects > 0) {
+            const pct = Math.round((studiedSubjects / totalSubjects) * 100);
+            if (pct === 50) {
+                pctHtml = `<span class="badge" style="background: rgba(245, 158, 11, 0.12); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.25); font-size: 10px; margin-top: 6px; display: inline-block; width: max-content; padding: 2px 6px; border-radius: 4px; font-weight: 700;"><i class="fa-solid fa-star-half-stroke"></i> 50% Estudado</span>`;
+            } else if (pct === 100 && !c.completed) {
+                pctHtml = `<span class="badge" style="background: rgba(16, 185, 129, 0.12); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.25); font-size: 10px; margin-top: 6px; display: inline-block; width: max-content; padding: 2px 6px; border-radius: 4px; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> 100% Estudado</span>`;
+            } else if (pct === 0 && !c.completed) {
+                pctHtml = `<span class="badge" style="background: rgba(107, 114, 128, 0.12); color: var(--text-muted); border: 1px solid rgba(107, 114, 128, 0.25); font-size: 10px; margin-top: 6px; display: inline-block; width: max-content; padding: 2px 6px; border-radius: 4px; font-weight: 500;">Pendente</span>`;
+            }
+        }
+        
         const card = document.createElement("div");
         card.className = `crono-card ${c.completed ? 'completed' : ''}`;
         
@@ -2224,6 +2247,7 @@ function renderCronograma() {
                 <span class="crono-day-num">${c.dia.substring(0, 3)}</span>
                 <span class="crono-week-num">${c.semana}</span>
                 <span class="crono-date">${dateStr}</span>
+                ${pctHtml}
             </div>
         `;
         
@@ -2364,63 +2388,59 @@ async function handleConcludeCronoDay(dateStr) {
     const find = state.crono.find(c => formatDateString(c.date) === dateStr);
     if (!find) return;
     
-    find.completed = true;
-    
-    // Marca matéria 1 como estudada no edital
-    const t1 = state.edital.find(x => x.subject === find.m1 && x.topic === find.a1);
-    if (t1) t1.studied = true;
-    
-    // Marca matéria 2 como estudada no edital (se for matéria válida)
     let hasM2 = find.m2 && find.m2 !== "DESCANSO" && find.m2 !== "REVISÃO SEMANAL";
-    if (hasM2) {
-        const t2 = state.edital.find(x => x.subject === find.m2 && x.topic === find.a2);
-        if (t2) t2.studied = true;
-    }
-    
-    // Salva
-    if (state.mode === "synced" && state.apiUrl) {
-        try {
-            // 1. Atualiza cronograma no Sheets
-            await fetch(state.apiUrl, {
-                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'updateCrono', date: dateStr, completed: true })
-            });
-            
-            // 2. Atualiza edital M1
-            await fetch(state.apiUrl, {
-                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'toggleEdital', subject: find.m1, topic: find.a1, studied: true })
-            });
-            
-            // 3. Atualiza edital M2 (se houver)
-            if (hasM2) {
-                await fetch(state.apiUrl, {
-                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'toggleEdital', subject: find.m2, topic: find.a2, studied: true })
-                });
-            }
-        } catch (e) {
-            console.error("Erro ao salvar conclusão na nuvem:", e);
-        }
-    } else {
-        saveLocalDataToStorage();
-    }
-    
-    // Atualiza a tela
-    processDataAndRender();
     
     // Configura os botões de escolha no modal de conclusões
     const container = document.getElementById("crono-choice-buttons-container");
     if (container) {
         container.innerHTML = "";
         
+        const saveAndClose = async () => {
+            find.completed = true;
+            // Marca matéria 1 como estudada no edital
+            const t1 = state.edital.find(x => x.subject === find.m1 && x.topic === find.a1);
+            if (t1) t1.studied = true;
+            
+            // Marca matéria 2 como estudada no edital (se for matéria válida)
+            if (hasM2) {
+                const t2 = state.edital.find(x => x.subject === find.m2 && x.topic === find.a2);
+                if (t2) t2.studied = true;
+            }
+            
+            // Salva no Sheets ou LocalStorage
+            if (state.mode === "synced" && state.apiUrl) {
+                try {
+                    await fetch(state.apiUrl, {
+                        method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'updateCrono', date: dateStr, completed: true })
+                    });
+                    await fetch(state.apiUrl, {
+                        method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'toggleEdital', subject: find.m1, topic: find.a1, studied: true })
+                    });
+                    if (hasM2) {
+                        await fetch(state.apiUrl, {
+                            method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'toggleEdital', subject: find.m2, topic: find.a2, studied: true })
+                        });
+                    }
+                } catch (e) {
+                    console.error("Erro ao salvar conclusão na nuvem:", e);
+                }
+            } else {
+                saveLocalDataToStorage();
+            }
+            processDataAndRender();
+        };
+        
         // Botão para M1
         const btnM1 = document.createElement("button");
         btnM1.className = "btn btn-primary btn-block";
         btnM1.type = "button";
         btnM1.innerHTML = `<i class="fa-solid fa-book"></i> Registrar: ${find.m1}`;
-        btnM1.onclick = () => {
+        btnM1.onclick = async () => {
             closeModal('modal-crono-choices');
+            await saveAndClose();
             openStudyLogPrefilled(dateStr, find.m1, find.a1);
         };
         container.appendChild(btnM1);
@@ -2431,8 +2451,9 @@ async function handleConcludeCronoDay(dateStr) {
             btnM2.className = "btn btn-secondary btn-block";
             btnM2.type = "button";
             btnM2.innerHTML = `<i class="fa-solid fa-book"></i> Registrar: ${find.m2}`;
-            btnM2.onclick = () => {
+            btnM2.onclick = async () => {
                 closeModal('modal-crono-choices');
+                await saveAndClose();
                 openStudyLogPrefilled(dateStr, find.m2, find.a2);
             };
             container.appendChild(btnM2);
@@ -2443,8 +2464,9 @@ async function handleConcludeCronoDay(dateStr) {
         btnOnly.className = "btn btn-outline btn-block";
         btnOnly.type = "button";
         btnOnly.innerHTML = `<i class="fa-solid fa-check"></i> Apenas Marcar Concluído`;
-        btnOnly.onclick = () => {
+        btnOnly.onclick = async () => {
             closeModal('modal-crono-choices');
+            await saveAndClose();
         };
         container.appendChild(btnOnly);
     }
