@@ -2420,7 +2420,7 @@ async function handleConcludeCronoDay(dateStr) {
         btnM1.innerHTML = `<i class="fa-solid fa-book"></i> Registrar: ${find.m1}`;
         btnM1.onclick = () => {
             closeModal('modal-crono-choices');
-            openStudyLogPrefilled(dateStr, find.m1, find.a1, true);
+            openStudyLogPrefilled(dateStr, find.m1, find.a1, false);
         };
         container.appendChild(btnM1);
         
@@ -2432,7 +2432,7 @@ async function handleConcludeCronoDay(dateStr) {
             btnM2.innerHTML = `<i class="fa-solid fa-book"></i> Registrar: ${find.m2}`;
             btnM2.onclick = () => {
                 closeModal('modal-crono-choices');
-                openStudyLogPrefilled(dateStr, find.m2, find.a2, true);
+                openStudyLogPrefilled(dateStr, find.m2, find.a2, false);
             };
             container.appendChild(btnM2);
         }
