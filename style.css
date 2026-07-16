@@ -1461,3 +1461,19 @@ textarea {
         justify-content: flex-start;
     }
 }
+
+/* Efeito de desfazer conclusão de dia */
+.btn-crono-completed-toggle .text-hover-undo {
+    display: none;
+}
+.btn-crono-completed-toggle:hover {
+    border-color: var(--danger) !important;
+    color: var(--danger) !important;
+    background: var(--danger-bg) !important;
+}
+.btn-crono-completed-toggle:hover .text-completed {
+    display: none;
+}
+.btn-crono-completed-toggle:hover .text-hover-undo {
+    display: inline;
+}

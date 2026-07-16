@@ -446,6 +446,7 @@ function processDataAndRender() {
     renderTAF();
     renderHistory();
     renderErrors();
+    populateFormDropdowns();
     
     // Desenha gráficos baseados na aba aberta
     const activeTab = document.querySelector(".menu-item.active").getAttribute("data-tab");
@@ -1337,15 +1338,7 @@ function initForms() {
     const studySubSelect = document.getElementById("study-subject");
     const studyTopSelect = document.getElementById("study-topic");
     
-    // Popula matérias no formulário de estudo
-    const subjectsList = Array.from(new Set(state.edital.map(t => t.subject)));
-    studySubSelect.innerHTML = `<option value="">Escolha a matéria...</option>`;
-    subjectsList.forEach(sub => {
-        const opt = document.createElement("option");
-        opt.value = sub;
-        opt.innerText = sub;
-        studySubSelect.appendChild(opt);
-    });
+    // (As matérias serão populadas dinamicamente via populateFormDropdowns após o carregamento dos dados)
     
     // Atualiza tópicos ao mudar matéria
     studySubSelect.addEventListener("change", () => {
@@ -2221,6 +2214,17 @@ function renderCronograma() {
         const m1Hot = DEFAULT_SYLLABUS.find(s => s.subject.toLowerCase() === c.m1.toLowerCase() && s.topic.toLowerCase() === c.a1.toLowerCase())?.hot;
         const m2Hot = c.m2 ? DEFAULT_SYLLABUS.find(s => s.subject.toLowerCase() === c.m2.toLowerCase() && s.topic.toLowerCase() === c.a2.toLowerCase())?.hot : false;
         
+        // Verifica status individual no edital
+        const t1 = state.edital.find(x => x.subject === c.m1 && x.topic === c.a1);
+        const t1Studied = t1 ? t1.studied : false;
+        
+        let m1ActionHtml = "";
+        if (t1Studied) {
+            m1ActionHtml = `<span style="color: var(--success); font-size: 11px; font-weight: 600; margin-left: 8px;"><i class="fa-solid fa-circle-check"></i> Estudado</span>`;
+        } else {
+            m1ActionHtml = `<button class="btn btn-outline btn-sm" style="padding: 2px 6px; font-size: 10px; margin-left: 8px;" onclick="openStudyLogPrefilled('${dateStr}', '${c.m1.replace(/'/g, "\\'")}', '${c.a1.replace(/'/g, "\\'")}')"><i class="fa-solid fa-plus"></i> Estudar</button>`;
+        }
+        
         const card = document.createElement("div");
         card.className = `crono-card ${c.completed ? 'completed' : ''}`;
         
@@ -2244,18 +2248,30 @@ function renderCronograma() {
                         <i class="fa-solid fa-book" style="color: var(--accent);"></i>
                         <span>${c.m1}</span>
                         ${m1Badge}
+                        ${m1ActionHtml}
                     </div>
                     <div class="crono-topic-text">${c.a1}</div>
                 </div>
         `;
         
         if (c.m2 && c.m2 !== "DESCANSO" && c.m2 !== "REVISÃO SEMANAL") {
+            const t2 = state.edital.find(x => x.subject === c.m2 && x.topic === c.a2);
+            const t2Studied = t2 ? t2.studied : false;
+            
+            let m2ActionHtml = "";
+            if (t2Studied) {
+                m2ActionHtml = `<span style="color: var(--success); font-size: 11px; font-weight: 600; margin-left: 8px;"><i class="fa-solid fa-circle-check"></i> Estudado</span>`;
+            } else {
+                m2ActionHtml = `<button class="btn btn-outline btn-sm" style="padding: 2px 6px; font-size: 10px; margin-left: 8px;" onclick="openStudyLogPrefilled('${dateStr}', '${c.m2.replace(/'/g, "\\'")}', '${c.a2.replace(/'/g, "\\'")}')"><i class="fa-solid fa-plus"></i> Estudar</button>`;
+            }
+            
             middleHtml += `
                 <div class="crono-subject-box">
                     <div class="crono-subject-header">
                         <i class="fa-solid fa-book" style="color: var(--warning);"></i>
                         <span>${c.m2}</span>
                         ${m2Badge}
+                        ${m2ActionHtml}
                     </div>
                     <div class="crono-topic-text">${c.a2}</div>
                 </div>
@@ -2274,21 +2290,22 @@ function renderCronograma() {
         
         middleHtml += `</div>`;
         
-        // Coluna Direita: Ações
+        // Coluna Direita: Ações (Botão Reversível para desfazer conclusão errada)
         let rightHtml = "";
         if (c.completed) {
             rightHtml = `
                 <div class="crono-card-right">
-                    <span class="badge-crono-completed">
-                        <i class="fa-solid fa-circle-check"></i> Feito
-                    </span>
+                    <button class="btn btn-secondary btn-sm btn-crono-completed-toggle" onclick="handleUnconcludeCronoDay('${dateStr.replace(/'/g, "\\'")}')">
+                        <span class="text-completed"><i class="fa-solid fa-circle-check"></i> Concluído</span>
+                        <span class="text-hover-undo"><i class="fa-solid fa-rotate-left"></i> Desfazer</span>
+                    </button>
                 </div>
             `;
         } else {
             rightHtml = `
                 <div class="crono-card-right">
                     <button class="btn btn-primary btn-sm" onclick="handleConcludeCronoDay('${dateStr.replace(/'/g, "\\'")}')">
-                        <i class="fa-solid fa-check"></i> Marcar Feito
+                        <i class="fa-solid fa-check"></i> Concluir Dia
                     </button>
                 </div>
             `;
@@ -2297,6 +2314,60 @@ function renderCronograma() {
         card.innerHTML = leftHtml + middleHtml + rightHtml;
         container.appendChild(card);
     });
+}
+
+// Abre o formulário de estudos já pré-preenchido
+function openStudyLogPrefilled(dateStr, subject, topic) {
+    openModal('modal-study');
+    
+    // Converte dateStr (DD/MM/YYYY) para YYYY-MM-DD
+    const dateParts = dateStr.split("/");
+    document.getElementById("study-date").value = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+    
+    // Define a matéria e dispara o change para carregar os tópicos correspondentes
+    const studySubjectSelect = document.getElementById("study-subject");
+    studySubjectSelect.value = subject;
+    studySubjectSelect.dispatchEvent(new Event("change"));
+    
+    const studyTopicSelect = document.getElementById("study-topic");
+    studyTopicSelect.value = topic;
+}
+
+// Preenche matérias e tópicos nos formulários baseados no estado carregado
+function populateFormDropdowns() {
+    const studySubSelect = document.getElementById("study-subject");
+    const studyTopSelect = document.getElementById("study-topic");
+    if (!studySubSelect) return;
+    
+    // Salva o valor atualmente selecionado
+    const currentSub = studySubSelect.value;
+    const currentTop = studyTopSelect.value;
+    
+    const subjectsList = Array.from(new Set(state.edital.map(t => t.subject)));
+    studySubSelect.innerHTML = `<option value="">Escolha a matéria...</option>`;
+    subjectsList.forEach(sub => {
+        const opt = document.createElement("option");
+        opt.value = sub;
+        opt.innerText = sub;
+        studySubSelect.appendChild(opt);
+    });
+    
+    // Restaura o valor da matéria e seus tópicos se existirem
+    if (currentSub && subjectsList.includes(currentSub)) {
+        studySubSelect.value = currentSub;
+        studyTopSelect.innerHTML = `<option value="">Escolha o assunto...</option>`;
+        const filteredTopics = state.edital.filter(t => t.subject === currentSub);
+        filteredTopics.forEach(t => {
+            const opt = document.createElement("option");
+            opt.value = t.topic;
+            opt.innerText = t.topic;
+            studyTopSelect.appendChild(opt);
+        });
+        
+        if (currentTop && filteredTopics.some(t => t.topic === currentTop)) {
+            studyTopSelect.value = currentTop;
+        }
+    }
 }
 
 async function handleConcludeCronoDay(dateStr) {
@@ -2348,22 +2419,32 @@ async function handleConcludeCronoDay(dateStr) {
     // Atualiza a tela
     processDataAndRender();
     
-    // Abre o modal de Registro de Estudos pré-preenchido com a matéria 1 do dia
-    openModal('modal-study');
+    alert(`Dia ${dateStr} concluído! Tópicos marcados como estudados no edital.`);
+}
+
+async function handleUnconcludeCronoDay(dateStr) {
+    const find = state.crono.find(c => formatDateString(c.date) === dateStr);
+    if (!find) return;
     
-    // Converte dateStr (DD/MM/YYYY) para YYYY-MM-DD
-    const dateParts = dateStr.split("/");
-    document.getElementById("study-date").value = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+    find.completed = false;
     
-    // Define a matéria e o tópico
-    const studySubjectSelect = document.getElementById("study-subject");
-    studySubjectSelect.value = find.m1;
-    studySubjectSelect.dispatchEvent(new Event("change"));
+    // Salva
+    if (state.mode === "synced" && state.apiUrl) {
+        try {
+            await fetch(state.apiUrl, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'updateCrono', date: dateStr, completed: false })
+            });
+        } catch (e) {
+            console.error("Erro ao desfazer conclusão na nuvem:", e);
+        }
+    } else {
+        saveLocalDataToStorage();
+    }
     
-    const studyTopicSelect = document.getElementById("study-topic");
-    studyTopicSelect.value = find.a1;
-    
-    alert(`Dia ${dateStr} concluído! Lançamos o status 'Estudado' nos seus tópicos no Edital. Agora, registre a duração e questões resolvidas para computar nos seus gráficos.`);
+    // Atualiza a tela
+    processDataAndRender();
+    alert(`Dia ${dateStr} redefinido para 'A Estudar'.`);
 }
 
 function toggleCronoFilterButton(activeId) {
@@ -2377,4 +2458,6 @@ function toggleCronoFilterButton(activeId) {
 
 // Expõe globalmente para ações inline do HTML
 window.handleConcludeCronoDay = handleConcludeCronoDay;
+window.handleUnconcludeCronoDay = handleUnconcludeCronoDay;
+window.openStudyLogPrefilled = openStudyLogPrefilled;
 window.renderCronograma = renderCronograma;
