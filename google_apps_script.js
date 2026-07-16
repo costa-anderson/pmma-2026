@@ -46,18 +46,21 @@ function doPost(e) {
 function handleGetData() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheets = ['Cronograma', 'Controle do Edital', 'Registro de Estudos', 'Simulados Cabecalho', 'Simulados Detalhes', 'Treino do TAF', 'Simulados do TAF'];
+    var sheets = ['Cronograma', 'Cronograma de Estudos', 'Controle do Edital', 'Registro de Estudos', 'Simulados Cabecalho', 'Simulados Detalhes', 'Treino do TAF', 'Simulados do TAF'];
     var result = {};
     
     sheets.forEach(function(sheetName) {
       var sheet = ss.getSheetByName(sheetName);
       if (sheet) {
         var values = sheet.getDataRange().getValues();
-        result[sheetName] = values;
-      } else {
-        result[sheetName] = [];
+        var key = (sheetName === 'Cronograma de Estudos') ? 'Cronograma' : sheetName;
+        result[key] = values;
       }
     });
+    
+    if (!result['Cronograma']) {
+      result['Cronograma'] = [];
+    }
     
     return createResponse({ status: 'success', data: result });
   } catch (e) {
@@ -228,8 +231,8 @@ function handleAddSimulado(data) {
 function handleUpdateCrono(data) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('Cronograma');
-    if (!sheet) return createResponse({ status: 'error', message: 'Aba Cronograma não encontrada.' });
+    var sheet = ss.getSheetByName('Cronograma') || ss.getSheetByName('Cronograma de Estudos');
+    if (!sheet) return createResponse({ status: 'error', message: 'Aba de Cronograma não encontrada.' });
     
     var values = sheet.getDataRange().getValues();
     var targetDateStr = String(data.date).trim(); // Formato esperado DD/MM/YYYY
