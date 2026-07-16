@@ -625,6 +625,49 @@
         </div>
     </div>
 
+    <!-- TELA DE BLOQUEIO / PIN LOGIN OVERLAY -->
+    <div class="login-overlay active" id="login-overlay">
+        <div class="login-container">
+            <div class="login-header">
+                <i class="fa-solid fa-shield-halved login-shield-icon"></i>
+                <h2 id="login-title">CENTRAL DE INTELIGÊNCIA</h2>
+                <span id="login-subtitle">QG PMMA 2026</span>
+            </div>
+            
+            <p class="login-message" id="login-message">Dispositivo Bloqueado. Digite seu PIN de acesso.</p>
+            
+            <!-- Indicadores de dígitos do PIN -->
+            <div class="pin-dots" id="pin-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            
+            <!-- Teclado Numérico -->
+            <div class="pin-keyboard">
+                <button type="button" class="pin-key" onclick="pressPinKey('1')">1</button>
+                <button type="button" class="pin-key" onclick="pressPinKey('2')">2</button>
+                <button type="button" class="pin-key" onclick="pressPinKey('3')">3</button>
+                
+                <button type="button" class="pin-key" onclick="pressPinKey('4')">4</button>
+                <button type="button" class="pin-key" onclick="pressPinKey('5')">5</button>
+                <button type="button" class="pin-key" onclick="pressPinKey('6')">6</button>
+                
+                <button type="button" class="pin-key" onclick="pressPinKey('7')">7</button>
+                <button type="button" class="pin-key" onclick="pressPinKey('8')">8</button>
+                <button type="button" class="pin-key" onclick="pressPinKey('9')">9</button>
+                
+                <button type="button" class="pin-key action-key" onclick="pressPinKey('C')">C</button>
+                <button type="button" class="pin-key" onclick="pressPinKey('0')">0</button>
+                <button type="button" class="pin-key action-key" onclick="pressPinKey('backspace')"><i class="fa-solid fa-backspace"></i></button>
+            </div>
+
+            <!-- Botão de Redefinir para caso o usuário queira resetar pelo console/limpando local -->
+            <p class="login-footer-hint" id="login-hint">Caso seja o primeiro acesso, digite o PIN que deseja criar.</p>
+        </div>
+    </div>
+
     <!-- Scripts de inicialização -->
     <script src="app.js"></script>
 </body>

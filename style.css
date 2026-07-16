@@ -1172,3 +1172,155 @@ textarea {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================================
+   TELA DE BLOQUEIO / LOGIN POR PIN (CSS)
+   ========================================================================== */
+.login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at center, rgba(8, 9, 12, 0.98) 0%, #040507 100%);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.login-overlay.active {
+    display: flex;
+}
+
+.login-container {
+    background: rgba(18, 22, 33, 0.7);
+    border: 1px solid var(--border-card);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 360px;
+    padding: 40px 30px;
+    box-shadow: 0 0 30px rgba(0, 229, 255, 0.08), var(--shadow-md);
+    text-align: center;
+    animation: modalSlide 0.4s ease;
+}
+
+.login-shield-icon {
+    font-size: 48px;
+    color: var(--accent);
+    filter: drop-shadow(0 0 12px var(--accent-glow));
+    margin-bottom: 16px;
+    animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+    0%, 100% { filter: drop-shadow(0 0 8px var(--accent-glow)); transform: scale(1); }
+    50% { filter: drop-shadow(0 0 18px var(--accent)); transform: scale(1.04); }
+}
+
+.login-header h2 {
+    font-family: var(--font-heading);
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.login-header span {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.login-message {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 24px 0 16px;
+    line-height: 1.4;
+}
+
+.pin-dots {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.pin-dots .dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--border-light);
+    transition: all var(--transition-fast);
+}
+
+.pin-dots .dot.filled {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+    transform: scale(1.1);
+}
+
+.pin-dots .dot.error {
+    background: var(--danger);
+    border-color: var(--danger);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+    animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
+.pin-keyboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    justify-items: center;
+    margin-bottom: 24px;
+}
+
+.pin-key {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+
+.pin-key:hover {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: var(--shadow-glow);
+}
+
+.pin-key:active {
+    transform: scale(0.92);
+}
+
+.pin-key.action-key {
+    font-size: 15px;
+    color: var(--text-secondary);
+}
+
+.login-footer-hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+

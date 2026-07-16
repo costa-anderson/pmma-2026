@@ -126,6 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initTabs();
     initForms();
     startCountdown();
+    checkPasscode();
     
     // Carrega dados iniciais (do Sheets ou localStorage)
     refreshData();
@@ -2002,3 +2003,132 @@ Date.prototype.toLocaleTextDay = function() {
     const days = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
     return days[this.getDay()];
 };
+
+// ==========================================================================
+// 🔐 Lógica de Controle do PIN Passcode (Login)
+// ==========================================================================
+let typedPin = "";
+let tempCreatedPin = "";
+let pinStep = "verify"; // "verify", "create-1", "create-2"
+
+function checkPasscode() {
+    const savedPin = localStorage.getItem("qg-pin");
+    const isAuthed = sessionStorage.getItem("qg-authenticated") === "true";
+    const overlay = document.getElementById("login-overlay");
+    
+    if (isAuthed) {
+        overlay.classList.remove("active");
+        return;
+    }
+    
+    overlay.classList.add("active");
+    typedPin = "";
+    updatePinDots();
+    
+    if (!savedPin) {
+        pinStep = "create-1";
+        document.getElementById("login-message").innerText = "Olá! Crie seu PIN de 4 dígitos para proteger seu QG de Estudos:";
+        document.getElementById("login-hint").innerText = "Este código ficará salvo apenas no seu navegador.";
+    } else {
+        pinStep = "verify";
+        document.getElementById("login-message").innerText = "Dispositivo Bloqueado. Digite seu PIN de acesso:";
+        document.getElementById("login-hint").innerText = "Insira seu código de 4 dígitos para continuar.";
+    }
+}
+
+function pressPinKey(key) {
+    if (key === 'C') {
+        typedPin = "";
+        updatePinDots();
+        return;
+    }
+    
+    if (key === 'backspace') {
+        typedPin = typedPin.slice(0, -1);
+        updatePinDots();
+        return;
+    }
+    
+    if (typedPin.length < 4) {
+        typedPin += key;
+        updatePinDots();
+    }
+    
+    if (typedPin.length === 4) {
+        setTimeout(processPinEntry, 250);
+    }
+}
+
+function updatePinDots() {
+    const dots = document.querySelectorAll("#pin-dots .dot");
+    dots.forEach((dot, idx) => {
+        if (idx < typedPin.length) {
+            dot.className = "dot filled";
+        } else {
+            dot.className = "dot";
+        }
+    });
+}
+
+function processPinEntry() {
+    const savedPin = localStorage.getItem("qg-pin");
+    const overlay = document.getElementById("login-overlay");
+    const msg = document.getElementById("login-message");
+    
+    if (pinStep === "verify") {
+        if (typedPin === savedPin) {
+            sessionStorage.setItem("qg-authenticated", "true");
+            overlay.classList.add("hidden");
+            setTimeout(() => {
+                overlay.classList.remove("active");
+                overlay.classList.remove("hidden");
+            }, 400);
+        } else {
+            showPinError();
+            msg.innerText = "PIN incorreto! Tente novamente:";
+            msg.style.color = "var(--danger)";
+        }
+    } else if (pinStep === "create-1") {
+        tempCreatedPin = typedPin;
+        typedPin = "";
+        updatePinDots();
+        pinStep = "create-2";
+        msg.innerText = "Confirme seu PIN de 4 dígitos para gravação:";
+        msg.style.color = "var(--accent)";
+    } else if (pinStep === "create-2") {
+        if (typedPin === tempCreatedPin) {
+            localStorage.setItem("qg-pin", typedPin);
+            sessionStorage.setItem("qg-authenticated", "true");
+            msg.innerText = "PIN configurado com sucesso! Entrando...";
+            msg.style.color = "var(--success)";
+            
+            setTimeout(() => {
+                overlay.classList.add("hidden");
+                setTimeout(() => {
+                    overlay.classList.remove("active");
+                    overlay.classList.remove("hidden");
+                }, 400);
+            }, 800);
+        } else {
+            showPinError();
+            pinStep = "create-1";
+            tempCreatedPin = "";
+            msg.innerText = "Os PINs não coincidem! Digite seu novo PIN:";
+            msg.style.color = "var(--danger)";
+        }
+    }
+}
+
+function showPinError() {
+    const dots = document.querySelectorAll("#pin-dots .dot");
+    dots.forEach(dot => {
+        dot.className = "dot error";
+    });
+    typedPin = "";
+    setTimeout(() => {
+        updatePinDots();
+    }, 600);
+}
+
+// Expõe globalmente
+window.pressPinKey = pressPinKey;
