@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QG PMMA 2026 - Central de Inteligência de Estudos</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Container Principal da Aplicação -->
+    <div class="app-container">
+        
+        <!-- Sidebar de Navegação -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-shield-halved brand-icon"></i>
+                <div class="brand-text">
+                    <h1>QG PMMA</h1>
+                    <span>CONCURSO 2026</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="menu-item" data-tab="edital">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>Controle Edital</span>
+                </a>
+                <a href="#" class="menu-item" data-tab="taf">
+                    <i class="fa-solid fa-person-running"></i>
+                    <span>Treino TAF</span>
+                </a>
+                <a href="#" class="menu-item" data-tab="historico">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Histórico</span>
+                </a>
+                <a href="#" class="menu-item" data-tab="erros">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Caderno Erros</span>
+                </a>
+                <a href="#" class="menu-item" data-tab="config">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Configurações</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="sync-badge" id="sync-status">
+                    <i class="fa-solid fa-circle-nodes"></i>
+                    <span id="sync-text">Modo Offline</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Área Principal de Conteúdo -->
+        <main class="main-content">
+            
+            <!-- Cabeçalho Principal (Top Bar) -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h2 id="current-tab-title">Dashboard</h2>
+                    <p id="current-tab-desc">Visão geral do seu progresso tático e estatísticas.</p>
+                </div>
+                
+                <div class="header-actions">
+                    <!-- Contador Regressivo da Prova -->
+                    <div class="countdown-container">
+                        <i class="fa-solid fa-hourglass-half"></i>
+                        <span id="countdown-timer">Carregando contador...</span>
+                    </div>
+                    
+                    <!-- Toggle Light/Dark Mode -->
+                    <button class="theme-toggle" id="theme-toggle-btn" title="Alternar Tema">
+                        <i class="fa-solid fa-sun icon-sun"></i>
+                        <i class="fa-solid fa-moon icon-moon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Seções das Abas (Exibidas Dinamicamente) -->
+            <div class="tab-content-container">
+
+                <!-- ABA 1: DASHBOARD -->
+                <section id="tab-dashboard" class="tab-pane active">
+                    <!-- Cards de Métricas Gerais -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="card-icon blue"><i class="fa-solid fa-clock"></i></div>
+                            <div class="card-info">
+                                <h3>Total Estudado</h3>
+                                <span class="metric-value" id="val-total-hours">0.0h</span>
+                                <span class="metric-trend" id="val-total-sessions">0 sessões</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="card-icon green"><i class="fa-solid fa-bullseye"></i></div>
+                            <div class="card-info">
+                                <h3>Acerto Questões</h3>
+                                <span class="metric-value" id="val-accuracy">0%</span>
+                                <span class="metric-trend" id="val-total-questions">0 questões</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="card-icon orange"><i class="fa-solid fa-circle-check"></i></div>
+                            <div class="card-info">
+                                <h3>Progresso Edital</h3>
+                                <span class="metric-value" id="val-edital-pct">0%</span>
+                                <span class="metric-trend" id="val-edital-ratio">0/87 tópicos</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="card-icon red"><i class="fa-solid fa-dumbbell"></i></div>
+                            <div class="card-info">
+                                <h3>Status TAF</h3>
+                                <span class="metric-value" id="val-taf-status">0/4</span>
+                                <span class="metric-trend">Metas alcançadas</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Divisão Principal: Cronograma de Hoje vs Gráficos -->
+                    <div class="dashboard-layout">
+                        <!-- Lado Esquerdo: Estudos de Hoje e Ações -->
+                        <div class="dashboard-left">
+                            <div class="panel-card today-studies-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-calendar-day"></i> Planejamento para Hoje</h3>
+                                    <span class="badge" id="today-date-badge">16/07/2026</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="today-subjects" id="today-subjects-list">
+                                        <!-- Preenchido Dinamicamente via JS -->
+                                        <p class="empty-state">Nenhum estudo agendado para hoje ou cronograma não configurado.</p>
+                                    </div>
+                                    <div class="today-actions">
+                                        <button class="btn btn-primary" id="btn-conclude-day">
+                                            <i class="fa-solid fa-check-double"></i> Concluir Dia do Ciclo
+                                        </button>
+                                        <button class="btn btn-secondary" id="btn-open-simulado">
+                                            <i class="fa-solid fa-file-signature"></i> Registrar Simulado
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card de Tópicos Quentes Destaque -->
+                            <div class="panel-card hot-topics-summary-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-fire"></i> Tópicos Quentes (Alta Incidência)</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="hot-progress-bar">
+                                        <div class="progress-info">
+                                            <span>Estudo das Prioridades do Tenente</span>
+                                            <span id="hot-topics-pct">0/24 (0%)</span>
+                                        </div>
+                                        <div class="progress-track">
+                                            <div class="progress-fill red-fill" id="hot-topics-fill" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <p class="hot-card-note">Estes 24 tópicos representam mais de 75% das questões históricas da banca Cebraspe para a PMMA.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lado Direito: Grid de Gráficos -->
+                        <div class="dashboard-right">
+                            <div class="panel-card chart-card">
+                                <div class="card-header"><h3><i class="fa-solid fa-chart-pie"></i> Cobertura Geral do Edital</h3></div>
+                                <div class="card-body chart-wrapper">
+                                    <canvas id="chart-edital-coverage"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="panel-card chart-card">
+                                <div class="card-header"><h3><i class="fa-solid fa-chart-column"></i> Acertos e Erros por Matéria</h3></div>
+                                <div class="card-body chart-wrapper">
+                                    <canvas id="chart-subject-accuracy"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="panel-card chart-card">
+                                <div class="card-header"><h3><i class="fa-solid fa-rotate"></i> Fluxo de Revisões</h3></div>
+                                <div class="card-body chart-wrapper">
+                                    <canvas id="chart-revision-status"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="panel-card chart-card">
+                                <div class="card-header"><h3><i class="fa-solid fa-heart-pulse"></i> Progresso do TAF</h3></div>
+                                <div class="card-body chart-wrapper">
+                                    <canvas id="chart-taf-radar"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ABA 2: CONTROLE DO EDITAL -->
+                <section id="tab-edital" class="tab-pane">
+                    <div class="tab-header-actions">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="edital-search" placeholder="Buscar assunto ou matéria...">
+                        </div>
+                        <div class="filter-toggles">
+                            <button class="btn btn-outline active" id="btn-filter-all">Todos</button>
+                            <button class="btn btn-outline" id="btn-filter-hot"><i class="fa-solid fa-fire"></i> Tópicos Quentes</button>
+                            <button class="btn btn-outline" id="btn-filter-pending">Pendentes</button>
+                        </div>
+                    </div>
+
+                    <!-- Accordion das Matérias -->
+                    <div class="edital-accordion-list" id="edital-accordion-container">
+                        <!-- Carregado dinamicamente via JS -->
+                        <p class="empty-state">Buscando informações do edital...</p>
+                    </div>
+                </section>
+
+                <!-- ABA 3: TREINOS E SIMULADOS TAF -->
+                <section id="tab-taf" class="tab-pane">
+                    <div class="taf-layout">
+                        <!-- Formulários do TAF -->
+                        <div class="taf-forms">
+                            <!-- Formulário 1: Treino Diário Isolado -->
+                            <div class="panel-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-person-running"></i> Registrar Treino Diário</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form id="form-taf-workout">
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="taf-workout-date">Data</label>
+                                                <input type="date" id="taf-workout-date" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="taf-workout-exercise">Exercício</label>
+                                                <select id="taf-workout-exercise" required>
+                                                    <option value="Barra Fixa">Barra Fixa (Meta: 4 reps)</option>
+                                                    <option value="Meio Sugado">Meio Sugado (Meta: 25 reps / 1 min)</option>
+                                                    <option value="Abdominal Remador">Abdominal Remador (Meta: 35 reps / 1 min)</option>
+                                                    <option value="Corrida">Corrida (Meta: 2400m / 12 min)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-row" id="row-standard-workout">
+                                            <div class="form-group">
+                                                <label for="taf-workout-sets">Séries</label>
+                                                <input type="number" id="taf-workout-sets" placeholder="Ex: 3" min="1">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="taf-workout-reps">Repetições por Série (Média/Total)</label>
+                                                <input type="number" id="taf-workout-reps" placeholder="Ex: 10" min="1">
+                                            </div>
+                                        </div>
+
+                                        <!-- Linha Especial para a Corrida (Time & Distance) -->
+                                        <div class="form-row hidden" id="row-run-workout">
+                                            <div class="form-group">
+                                                <label for="taf-workout-distance">Distância (Metros)</label>
+                                                <input type="number" id="taf-workout-distance" placeholder="Ex: 2400" min="1">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="taf-workout-time">Duração do Treino (Minutos)</label>
+                                                <input type="number" id="taf-workout-time" placeholder="Ex: 30" min="1">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="taf-workout-rest">Descanso entre Séries (Segundos)</label>
+                                                <input type="number" id="taf-workout-rest" placeholder="Ex: 90" min="0">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="taf-workout-duration">Tempo Total de Treino (Minutos)</label>
+                                                <input type="number" id="taf-workout-duration" placeholder="Ex: 45" min="1">
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary btn-block">Salvar Treino</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Formulário 2: Simulado Completo TAF -->
+                            <div class="panel-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-trophy"></i> Simulado Oficial do TAF (Semanal)</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form id="form-taf-simulado">
+                                        <div class="form-group">
+                                            <label for="taf-sim-date">Data</label>
+                                            <input type="date" id="taf-sim-date" required>
+                                        </div>
+                                        <div class="form-grid-3">
+                                            <div class="form-group">
+                                                <label for="taf-sim-barra">Barra Fixa (Reps)</label>
+                                                <input type="number" id="taf-sim-barra" placeholder="Meta: 4" min="0" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="taf-sim-sugado">Meio Sugado (1 min)</label>
+                                                <input type="number" id="taf-sim-sugado" placeholder="Meta: 25" min="0" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="taf-sim-abdominal">Abdominal (1 min)</label>
+                                                <input type="number" id="taf-sim-abdominal" placeholder="Meta: 35" min="0" required>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="taf-sim-corrida">Corrida 12 Minutos (Metros)</label>
+                                                <input type="number" id="taf-sim-corrida" placeholder="Meta: 2400m" min="0" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="taf-sim-duration">Duração do Simulado (Minutos)</label>
+                                                <input type="number" id="taf-sim-duration" placeholder="Ex: 50" min="1" required>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="taf-sim-notes">Anotações do Simulado</label>
+                                            <textarea id="taf-sim-notes" rows="2" placeholder="Como se sentiu? Dificuldades?"></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-secondary btn-block">Registrar Simulado TAF</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gráficos e Evolução Física -->
+                        <div class="taf-evolution">
+                            <div class="panel-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-chart-line"></i> Evolução da Força (Barra & Abdominal)</h3>
+                                </div>
+                                <div class="card-body chart-wrapper-large">
+                                    <canvas id="chart-taf-strength"></canvas>
+                                </div>
+                            </div>
+                            <div class="panel-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-chart-line"></i> Evolução do Cardio (Corrida & Meio Sugado)</h3>
+                                </div>
+                                <div class="card-body chart-wrapper-large">
+                                    <canvas id="chart-taf-cardio"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ABA 4: HISTÓRICO DE ATIVIDADES -->
+                <section id="tab-historico" class="tab-pane">
+                    <div class="tab-header-actions">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="history-search" placeholder="Buscar no histórico...">
+                        </div>
+                        <div class="filter-toggles">
+                            <select id="history-filter-type" class="form-select">
+                                <option value="all">Todos os Registros</option>
+                                <option value="estudos">Estudos Diários</option>
+                                <option value="simulados">Simulados Teóricos</option>
+                                <option value="taf">Treinos do TAF</option>
+                                <option value="taf-sim">Simulados do TAF</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="panel-card scrollable-card">
+                        <div class="card-body no-padding">
+                            <table class="data-table" id="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Categoria</th>
+                                        <th>Descrição</th>
+                                        <th>Detalhes / Rendimento</th>
+                                        <th>Observações</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                    <!-- Preenchido via Javascript -->
+                                    <tr>
+                                        <td colspan="6" class="center empty-state">Nenhuma atividade registrada no histórico.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ABA 5: CADERNO DE ERROS -->
+                <section id="tab-erros" class="tab-pane">
+                    <div class="tab-header-actions">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="erros-search" placeholder="Filtrar erros anotados...">
+                        </div>
+                        <div class="filter-toggles">
+                            <select id="erros-filter-subject" class="form-select">
+                                <option value="all">Todas as Matérias</option>
+                                <!-- Preenchido dinamicamente com matérias ativas -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="erros-grid" id="erros-cards-container">
+                        <!-- Carregado via Javascript -->
+                        <p class="empty-state">Nenhum erro registrado ou pendente de revisão!</p>
+                    </div>
+                </section>
+
+                <!-- ABA 6: CONFIGURAÇÕES -->
+                <section id="tab-config" class="tab-pane">
+                    <div class="config-layout">
+                        <!-- Card 1: Sincronização Google Sheets -->
+                        <div class="panel-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-circle-nodes"></i> Configuração da Sincronização em Nuvem</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="config-help-text">Insira a URL do Aplicativo Web que você implantou a partir do Google Apps Script para sincronizar dados automaticamente.</p>
+                                
+                                <div class="form-group">
+                                    <label for="config-api-url">URL do Google Apps Script Web App</label>
+                                    <input type="url" id="config-api-url" placeholder="https://script.google.com/macros/s/.../exec">
+                                </div>
+                                
+                                <div class="config-actions">
+                                    <button class="btn btn-primary" id="btn-save-config">
+                                        <i class="fa-solid fa-floppy-disk"></i> Salvar e Conectar
+                                    </button>
+                                    <button class="btn btn-outline" id="btn-test-connection">
+                                        <i class="fa-solid fa-circle-question"></i> Testar Conectividade
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Modo Local e Banco de Dados -->
+                        <div class="panel-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-database"></i> Banco de Dados Local (Modo Demonstração)</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="config-help-text">Caso queira testar a plataforma sem configurar a planilha do Google Sheets, você pode utilizar o banco de dados interno do navegador (localStorage).</p>
+                                
+                                <div class="config-actions" style="margin-bottom: 20px;">
+                                    <button class="btn btn-secondary" id="btn-use-demo-data">
+                                        <i class="fa-solid fa-vial"></i> Carregar Dados Demo
+                                    </button>
+                                    <button class="btn btn-danger" id="btn-clear-local-db">
+                                        <i class="fa-solid fa-trash-can"></i> Limpar Dados Locais
+                                    </button>
+                                </div>
+
+                                <div class="form-group" style="margin-top: 20px; border-top: 1px solid var(--border-light); padding-top: 20px;">
+                                    <label for="config-import-json">Importar Dados da Planilha Excel (.json)</label>
+                                    <textarea id="config-import-json" rows="4" placeholder="Abra o arquivo 'pmma_data_export.json' gerado, copie o texto e cole aqui para migrar seus dados locais..."></textarea>
+                                </div>
+                                <button class="btn btn-primary btn-block" id="btn-import-local-json">
+                                    <i class="fa-solid fa-file-import"></i> Importar Dados Locais
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL 1: REGISTRAR ESTUDO RÁPIDO -->
+    <div class="modal-overlay" id="modal-study">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modal-study-title">Registrar Sessão de Estudo</h3>
+                <button class="modal-close" onclick="closeModal('modal-study')">&times;</button>
+            </div>
+            <form id="form-add-study">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="study-date">Data</label>
+                            <input type="date" id="study-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="study-subject">Matéria</label>
+                            <select id="study-subject" required>
+                                <!-- Preenchido dinamicamente -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="study-topic">Assunto Específico</label>
+                        <select id="study-topic" required>
+                            <option value="">Selecione a matéria primeiro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="study-type">Tipo de Estudo</label>
+                            <select id="study-type" required>
+                                <option value="Teoria">Teoria</option>
+                                <option value="Questões">Questões</option>
+                                <option value="Revisão">Revisão</option>
+                                <option value="Simulado">Simulado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="study-duration">Tempo de Estudo (Minutos)</label>
+                            <input type="number" id="study-duration" placeholder="Ex: 60" min="1" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label for="study-questions">Questões Resolvidas</label>
+                            <input type="number" id="study-questions" placeholder="Ex: 20" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="study-correct">Quantidade de Acertos</label>
+                            <input type="number" id="study-correct" placeholder="Ex: 18" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Aproveitamento</label>
+                            <input type="text" id="study-accuracy-preview" class="form-control" readonly value="0%">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="study-notes">Anotações / Erros Comuns</label>
+                        <textarea id="study-notes" rows="3" placeholder="Anote macetes, regrinhas ou detalhes que você errou para revisar mais tarde no caderno de erros..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-study')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Estudo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: REGISTRAR SIMULADO MESTRE-DETALHE -->
+    <div class="modal-overlay" id="modal-simulado">
+        <div class="modal-container modal-large">
+            <div class="modal-header">
+                <h3>Registrar Simulado Geral (Mestre-Detalhe)</h3>
+                <button class="modal-close" onclick="closeModal('modal-simulado')">&times;</button>
+            </div>
+            <form id="form-add-simulado">
+                <div class="modal-body">
+                    <!-- Informações Principais (Mestre) -->
+                    <div class="simulado-master-section">
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label for="sim-name">Nome do Simulado</label>
+                                <input type="text" id="sim-name" placeholder="Ex: Simulado Geral Cebraspe 1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="sim-date">Data de Realização</label>
+                                <input type="date" id="sim-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Resultado Acumulado</label>
+                                <div class="simulado-totals-badge">
+                                    <span id="sim-total-correct">0</span> / <span id="sim-total-questions">0</span> Acertos (<span id="sim-total-pct">0%</span>)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detalhes por Matéria (Tabela Dinâmica) -->
+                    <div class="simulado-detail-section">
+                        <h4>Desempenho por Matéria / Assunto</h4>
+                        <p class="section-help-text">Adicione linhas correspondentes a cada assunto cobrado no simulado.</p>
+                        
+                        <div class="table-container">
+                            <table class="detail-table" id="sim-detail-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 20%;">Matéria</th>
+                                        <th style="width: 25%;">Assunto</th>
+                                        <th style="width: 10%;">Questões</th>
+                                        <th style="width: 10%;">Acertos</th>
+                                        <th style="width: 25%;">Anotações do Erro / Obs</th>
+                                        <th style="width: 8%;">Revisar?</th>
+                                        <th style="width: 5%;">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sim-detail-rows">
+                                    <!-- Inserido dinamicamente via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <button type="button" class="btn btn-outline btn-sm" id="btn-add-sim-row">
+                            <i class="fa-solid fa-plus"></i> Adicionar Matéria
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-simulado')">Cancelar</button>
+                    <button type="submit" class="btn btn-secondary">Gravar Simulado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts de inicialização -->
+    <script src="app.js"></script>
+</body>
+</html>
