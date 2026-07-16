@@ -114,6 +114,9 @@ let state = {
     simuladosTaf: []
 };
 
+// Controle de conclusão postergada do cronograma
+let pendingCronoConcludeDate = null;
+
 // Variáveis para guardar instâncias dos Gráficos (Chart.js)
 let charts = {};
 
@@ -1439,6 +1442,12 @@ function initForms() {
             saveLocalDataToStorage();
         }
         
+        // Se havia uma conclusão de cronograma vinculada a este envio, executa agora
+        if (pendingCronoConcludeDate) {
+            await concludeCronoDayDirectly(pendingCronoConcludeDate);
+            pendingCronoConcludeDate = null;
+        }
+        
         closeModal('modal-study');
         document.getElementById("form-add-study").reset();
         preview.value = "0%";
@@ -1901,6 +1910,9 @@ function openModal(id) {
 
 function closeModal(id) {
     document.getElementById(id).classList.remove("active");
+    if (id === 'modal-study') {
+        pendingCronoConcludeDate = null;
+    }
 }
 
 // Expõe funções auxiliares globalmente para uso direto no HTML inline
@@ -2331,7 +2343,13 @@ function renderCronograma() {
 }
 
 // Abre o formulário de estudos já pré-preenchido
-function openStudyLogPrefilled(dateStr, subject, topic) {
+function openStudyLogPrefilled(dateStr, subject, topic, shouldConclude = false) {
+    if (shouldConclude) {
+        pendingCronoConcludeDate = dateStr;
+    } else {
+        pendingCronoConcludeDate = null;
+    }
+    
     openModal('modal-study');
     
     // Converte dateStr (DD/MM/YYYY) para YYYY-MM-DD
@@ -2395,53 +2413,14 @@ async function handleConcludeCronoDay(dateStr) {
     if (container) {
         container.innerHTML = "";
         
-        const saveAndClose = async () => {
-            find.completed = true;
-            // Marca matéria 1 como estudada no edital
-            const t1 = state.edital.find(x => x.subject === find.m1 && x.topic === find.a1);
-            if (t1) t1.studied = true;
-            
-            // Marca matéria 2 como estudada no edital (se for matéria válida)
-            if (hasM2) {
-                const t2 = state.edital.find(x => x.subject === find.m2 && x.topic === find.a2);
-                if (t2) t2.studied = true;
-            }
-            
-            // Salva no Sheets ou LocalStorage
-            if (state.mode === "synced" && state.apiUrl) {
-                try {
-                    await fetch(state.apiUrl, {
-                        method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'updateCrono', date: dateStr, completed: true })
-                    });
-                    await fetch(state.apiUrl, {
-                        method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'toggleEdital', subject: find.m1, topic: find.a1, studied: true })
-                    });
-                    if (hasM2) {
-                        await fetch(state.apiUrl, {
-                            method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'toggleEdital', subject: find.m2, topic: find.a2, studied: true })
-                        });
-                    }
-                } catch (e) {
-                    console.error("Erro ao salvar conclusão na nuvem:", e);
-                }
-            } else {
-                saveLocalDataToStorage();
-            }
-            processDataAndRender();
-        };
-        
         // Botão para M1
         const btnM1 = document.createElement("button");
         btnM1.className = "btn btn-primary btn-block";
         btnM1.type = "button";
         btnM1.innerHTML = `<i class="fa-solid fa-book"></i> Registrar: ${find.m1}`;
-        btnM1.onclick = async () => {
+        btnM1.onclick = () => {
             closeModal('modal-crono-choices');
-            await saveAndClose();
-            openStudyLogPrefilled(dateStr, find.m1, find.a1);
+            openStudyLogPrefilled(dateStr, find.m1, find.a1, true);
         };
         container.appendChild(btnM1);
         
@@ -2451,10 +2430,9 @@ async function handleConcludeCronoDay(dateStr) {
             btnM2.className = "btn btn-secondary btn-block";
             btnM2.type = "button";
             btnM2.innerHTML = `<i class="fa-solid fa-book"></i> Registrar: ${find.m2}`;
-            btnM2.onclick = async () => {
+            btnM2.onclick = () => {
                 closeModal('modal-crono-choices');
-                await saveAndClose();
-                openStudyLogPrefilled(dateStr, find.m2, find.a2);
+                openStudyLogPrefilled(dateStr, find.m2, find.a2, true);
             };
             container.appendChild(btnM2);
         }
@@ -2466,12 +2444,55 @@ async function handleConcludeCronoDay(dateStr) {
         btnOnly.innerHTML = `<i class="fa-solid fa-check"></i> Apenas Marcar Concluído`;
         btnOnly.onclick = async () => {
             closeModal('modal-crono-choices');
-            await saveAndClose();
+            await concludeCronoDayDirectly(dateStr);
         };
         container.appendChild(btnOnly);
     }
     
     openModal('modal-crono-choices');
+}
+
+async function concludeCronoDayDirectly(dateStr) {
+    const find = state.crono.find(c => formatDateString(c.date) === dateStr);
+    if (!find) return;
+    
+    find.completed = true;
+    
+    // Marca matéria 1 como estudada no edital
+    const t1 = state.edital.find(x => x.subject === find.m1 && x.topic === find.a1);
+    if (t1) t1.studied = true;
+    
+    // Marca matéria 2 como estudada no edital (se for matéria válida)
+    let hasM2 = find.m2 && find.m2 !== "DESCANSO" && find.m2 !== "REVISÃO SEMANAL";
+    if (hasM2) {
+        const t2 = state.edital.find(x => x.subject === find.m2 && x.topic === find.a2);
+        if (t2) t2.studied = true;
+    }
+    
+    // Salva
+    if (state.mode === "synced" && state.apiUrl) {
+        try {
+            await fetch(state.apiUrl, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'updateCrono', date: dateStr, completed: true })
+            });
+            await fetch(state.apiUrl, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'toggleEdital', subject: find.m1, topic: find.a1, studied: true })
+            });
+            if (hasM2) {
+                await fetch(state.apiUrl, {
+                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'toggleEdital', subject: find.m2, topic: find.a2, studied: true })
+                });
+            }
+        } catch (e) {
+            console.error("Erro ao salvar conclusão na nuvem:", e);
+        }
+    } else {
+        saveLocalDataToStorage();
+    }
+    processDataAndRender();
 }
 
 async function handleUnconcludeCronoDay(dateStr) {
@@ -2513,3 +2534,4 @@ window.handleConcludeCronoDay = handleConcludeCronoDay;
 window.handleUnconcludeCronoDay = handleUnconcludeCronoDay;
 window.openStudyLogPrefilled = openStudyLogPrefilled;
 window.renderCronograma = renderCronograma;
+window.concludeCronoDayDirectly = concludeCronoDayDirectly;
