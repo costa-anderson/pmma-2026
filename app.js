@@ -182,6 +182,7 @@ function initTabs() {
             // Atualiza Títulos
             const tabTitles = {
                 dashboard: { title: "Dashboard", desc: "Visão geral do seu progresso tático e estatísticas." },
+                cronograma: { title: "Cronograma de Estudos", desc: "Acompanhe o planejamento dos estudos e treinos dia a dia." },
                 edital: { title: "Controle do Edital", desc: "Acompanhe a cobertura teórica e revise os tópicos mais cobrados." },
                 taf: { title: "Treino do TAF", desc: "Monitore a sua evolução física para bater os índices mínimos do edital." },
                 historico: { title: "Histórico Geral", desc: "Logs de todas as atividades de estudos e treinos físicos realizados." },
@@ -194,11 +195,13 @@ function initTabs() {
                 document.getElementById("current-tab-desc").innerText = tabTitles[tabId].desc;
             }
             
-            // Recarrega gráficos se mudar para aba que possui gráficos
+            // Recarrega gráficos/telas se mudar para aba específica
             if (tabId === 'dashboard') {
                 setTimeout(renderDashboardCharts, 100);
             } else if (tabId === 'taf') {
                 setTimeout(renderTafCharts, 100);
+            } else if (tabId === 'cronograma') {
+                setTimeout(renderCronograma, 100);
             }
         });
     });
@@ -402,17 +405,34 @@ function parseSheetsData(rawData) {
     }
 }
 
-// Auxiliar para formatar strings de data vindas de Sheets
+// Auxiliar para formatar strings de data vindas de Sheets ou JSON
 function formatDateString(val) {
     if (!val) return "";
-    if (val instanceof Date || String(val).includes("T")) {
+    if (val instanceof Date || (String(val).includes("T") && !String(val).includes("/")) ) {
         const d = new Date(val);
         return d.toLocaleDateString('pt-BR');
     }
-    const clean = String(val).split(" ")[0];
+    let clean = String(val).split(" ")[0];
+    let parts = [];
     if (clean.includes("-")) {
-        const parts = clean.split("-");
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        parts = clean.split("-");
+        if (parts[0].length === 4) {
+            parts = [parts[2], parts[1], parts[0]];
+        }
+    } else if (clean.includes("/")) {
+        parts = clean.split("/");
+    } else {
+        return clean;
+    }
+    
+    if (parts.length === 3) {
+        let day = String(parts[0]).padStart(2, "0");
+        let month = String(parts[1]).padStart(2, "0");
+        let year = String(parts[2]);
+        if (year.length === 2) {
+            year = "20" + year;
+        }
+        return `${day}/${month}/${year}`;
     }
     return clean;
 }
@@ -421,6 +441,7 @@ function formatDateString(val) {
 function processDataAndRender() {
     renderMetrics();
     renderTodayPlan();
+    renderCronograma();
     renderEdital();
     renderTAF();
     renderHistory();
@@ -1816,6 +1837,25 @@ function initForms() {
         }
     });
 
+    // Listeners do Cronograma Completo
+    const cronoSearch = document.getElementById("crono-search");
+    if (cronoSearch) {
+        cronoSearch.addEventListener("input", renderCronograma);
+        
+        document.getElementById("btn-crono-all").addEventListener("click", () => {
+            toggleCronoFilterButton("btn-crono-all");
+            renderCronograma();
+        });
+        document.getElementById("btn-crono-pending").addEventListener("click", () => {
+            toggleCronoFilterButton("btn-crono-pending");
+            renderCronograma();
+        });
+        document.getElementById("btn-crono-completed").addEventListener("click", () => {
+            toggleCronoFilterButton("btn-crono-completed");
+            renderCronograma();
+        });
+    }
+
     document.getElementById("btn-import-local-json").addEventListener("click", () => {
         const text = document.getElementById("config-import-json").value.trim();
         if (!text) {
@@ -2132,3 +2172,209 @@ function showPinError() {
 
 // Expõe globalmente
 window.pressPinKey = pressPinKey;
+
+// ==========================================================================
+// 📅 Funções de Renderização e Ação do Cronograma
+// ==========================================================================
+function renderCronograma() {
+    const container = document.getElementById("crono-timeline-list");
+    if (!container) return;
+    container.innerHTML = "";
+    
+    const searchVal = document.getElementById("crono-search").value.toLowerCase();
+    
+    // Obtém o botão de filtro ativo
+    let activeFilter = "btn-crono-all";
+    const activeBtn = document.querySelector(".filter-toggles button.active[id^='btn-crono-']");
+    if (activeBtn) activeFilter = activeBtn.id;
+    
+    let filteredCrono = state.crono;
+    
+    // Filtros de Status
+    if (activeFilter === "btn-crono-pending") {
+        filteredCrono = filteredCrono.filter(c => !c.completed);
+    } else if (activeFilter === "btn-crono-completed") {
+        filteredCrono = filteredCrono.filter(c => c.completed);
+    }
+    
+    // Filtro de Busca
+    if (searchVal) {
+        filteredCrono = filteredCrono.filter(c => 
+            String(c.date).toLowerCase().includes(searchVal) ||
+            c.dia.toLowerCase().includes(searchVal) ||
+            c.m1.toLowerCase().includes(searchVal) ||
+            c.a1.toLowerCase().includes(searchVal) ||
+            (c.m2 && c.m2.toLowerCase().includes(searchVal)) ||
+            (c.a2 && c.a2.toLowerCase().includes(searchVal))
+        );
+    }
+    
+    if (filteredCrono.length === 0) {
+        container.innerHTML = `<p class="empty-state">Nenhum dia de estudo corresponde aos filtros.</p>`;
+        return;
+    }
+    
+    filteredCrono.forEach(c => {
+        const dateStr = formatDateString(c.date);
+        
+        // Verifica se as matérias/assuntos são tópicos quentes
+        const m1Hot = DEFAULT_SYLLABUS.find(s => s.subject.toLowerCase() === c.m1.toLowerCase() && s.topic.toLowerCase() === c.a1.toLowerCase())?.hot;
+        const m2Hot = c.m2 ? DEFAULT_SYLLABUS.find(s => s.subject.toLowerCase() === c.m2.toLowerCase() && s.topic.toLowerCase() === c.a2.toLowerCase())?.hot : false;
+        
+        const card = document.createElement("div");
+        card.className = `crono-card ${c.completed ? 'completed' : ''}`;
+        
+        // Coluna Esquerda: Informações de Tempo
+        const leftHtml = `
+            <div class="crono-card-left">
+                <span class="crono-day-num">${c.dia.substring(0, 3)}</span>
+                <span class="crono-week-num">${c.semana}</span>
+                <span class="crono-date">${dateStr}</span>
+            </div>
+        `;
+        
+        // Coluna Meio: Matérias e Assuntos
+        const m1Badge = m1Hot ? `<span class="crono-badge-hot"><i class="fa-solid fa-fire"></i> Tenente</span>` : "";
+        const m2Badge = m2Hot ? `<span class="crono-badge-hot"><i class="fa-solid fa-fire"></i> Tenente</span>` : "";
+        
+        let middleHtml = `
+            <div class="crono-card-middle">
+                <div class="crono-subject-box">
+                    <div class="crono-subject-header">
+                        <i class="fa-solid fa-book" style="color: var(--accent);"></i>
+                        <span>${c.m1}</span>
+                        ${m1Badge}
+                    </div>
+                    <div class="crono-topic-text">${c.a1}</div>
+                </div>
+        `;
+        
+        if (c.m2 && c.m2 !== "DESCANSO" && c.m2 !== "REVISÃO SEMANAL") {
+            middleHtml += `
+                <div class="crono-subject-box">
+                    <div class="crono-subject-header">
+                        <i class="fa-solid fa-book" style="color: var(--warning);"></i>
+                        <span>${c.m2}</span>
+                        ${m2Badge}
+                    </div>
+                    <div class="crono-topic-text">${c.a2}</div>
+                </div>
+            `;
+        } else if (c.m2) {
+            middleHtml += `
+                <div class="crono-subject-box">
+                    <div class="crono-subject-header" style="color: var(--warning);">
+                        <i class="fa-solid fa-mug-hot"></i>
+                        <span>${c.m2}</span>
+                    </div>
+                    <div class="crono-topic-text">${c.a2}</div>
+                </div>
+            `;
+        }
+        
+        middleHtml += `</div>`;
+        
+        // Coluna Direita: Ações
+        let rightHtml = "";
+        if (c.completed) {
+            rightHtml = `
+                <div class="crono-card-right">
+                    <span class="badge-crono-completed">
+                        <i class="fa-solid fa-circle-check"></i> Feito
+                    </span>
+                </div>
+            `;
+        } else {
+            rightHtml = `
+                <div class="crono-card-right">
+                    <button class="btn btn-primary btn-sm" onclick="handleConcludeCronoDay('${dateStr.replace(/'/g, "\\'")}')">
+                        <i class="fa-solid fa-check"></i> Marcar Feito
+                    </button>
+                </div>
+            `;
+        }
+        
+        card.innerHTML = leftHtml + middleHtml + rightHtml;
+        container.appendChild(card);
+    });
+}
+
+async function handleConcludeCronoDay(dateStr) {
+    const find = state.crono.find(c => formatDateString(c.date) === dateStr);
+    if (!find) return;
+    
+    find.completed = true;
+    
+    // Marca matéria 1 como estudada no edital
+    const t1 = state.edital.find(x => x.subject === find.m1 && x.topic === find.a1);
+    if (t1) t1.studied = true;
+    
+    // Marca matéria 2 como estudada no edital (se for matéria válida)
+    let hasM2 = find.m2 && find.m2 !== "DESCANSO" && find.m2 !== "REVISÃO SEMANAL";
+    if (hasM2) {
+        const t2 = state.edital.find(x => x.subject === find.m2 && x.topic === find.a2);
+        if (t2) t2.studied = true;
+    }
+    
+    // Salva
+    if (state.mode === "synced" && state.apiUrl) {
+        try {
+            // 1. Atualiza cronograma no Sheets
+            await fetch(state.apiUrl, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'updateCrono', date: dateStr, completed: true })
+            });
+            
+            // 2. Atualiza edital M1
+            await fetch(state.apiUrl, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'toggleEdital', subject: find.m1, topic: find.a1, studied: true })
+            });
+            
+            // 3. Atualiza edital M2 (se houver)
+            if (hasM2) {
+                await fetch(state.apiUrl, {
+                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'toggleEdital', subject: find.m2, topic: find.a2, studied: true })
+                });
+            }
+        } catch (e) {
+            console.error("Erro ao salvar conclusão na nuvem:", e);
+        }
+    } else {
+        saveLocalDataToStorage();
+    }
+    
+    // Atualiza a tela
+    processDataAndRender();
+    
+    // Abre o modal de Registro de Estudos pré-preenchido com a matéria 1 do dia
+    openModal('modal-study');
+    
+    // Converte dateStr (DD/MM/YYYY) para YYYY-MM-DD
+    const dateParts = dateStr.split("/");
+    document.getElementById("study-date").value = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+    
+    // Define a matéria e o tópico
+    const studySubjectSelect = document.getElementById("study-subject");
+    studySubjectSelect.value = find.m1;
+    studySubjectSelect.dispatchEvent(new Event("change"));
+    
+    const studyTopicSelect = document.getElementById("study-topic");
+    studyTopicSelect.value = find.a1;
+    
+    alert(`Dia ${dateStr} concluído! Lançamos o status 'Estudado' nos seus tópicos no Edital. Agora, registre a duração e questões resolvidas para computar nos seus gráficos.`);
+}
+
+function toggleCronoFilterButton(activeId) {
+    const buttons = ["btn-crono-all", "btn-crono-pending", "btn-crono-completed"];
+    buttons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (id === activeId) btn.classList.add("active");
+        else btn.classList.remove("active");
+    });
+}
+
+// Expõe globalmente para ações inline do HTML
+window.handleConcludeCronoDay = handleConcludeCronoDay;
+window.renderCronograma = renderCronograma;

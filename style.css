@@ -1324,3 +1324,140 @@ textarea {
     line-height: 1.4;
 }
 
+/* ==========================================================================
+   ABA: Cronograma Completo (CSS)
+   ========================================================================== */
+.crono-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.crono-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 16px;
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: 180px 1fr 180px;
+    align-items: center;
+    gap: 24px;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+}
+
+.crono-card:hover {
+    border-color: var(--border-card-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow);
+}
+
+.crono-card.completed {
+    border-left: 4px solid var(--success);
+}
+
+.crono-card-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-right: 1px solid var(--border-light);
+    padding-right: 16px;
+}
+
+.crono-day-num {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--accent);
+}
+
+.crono-week-num {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.crono-date {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.crono-card-middle {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.crono-subject-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.crono-subject-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.crono-topic-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.crono-badge-hot {
+    background: var(--danger-bg);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.crono-card-right {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.badge-crono-completed {
+    background: var(--success-bg);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: var(--success);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+@media (max-width: 768px) {
+    .crono-card {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .crono-card-left {
+        border-right: none;
+        border-bottom: 1px solid var(--border-light);
+        padding-right: 0;
+        padding-bottom: 12px;
+    }
+    .crono-card-right {
+        justify-content: flex-start;
+    }
+}

@@ -31,7 +31,7 @@ if "Cronograma de Estudos" in wb.sheetnames:
             # Data format
             d_val = r[0]
             if isinstance(d_val, datetime):
-                d_str = d_val.strftime("%d/%m/%y")
+                d_str = d_val.strftime("%d/%m/%Y")
             else:
                 d_str = str(d_val).split(" ")[0]
                 

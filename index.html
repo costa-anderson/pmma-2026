@@ -34,6 +34,10 @@
                     <i class="fa-solid fa-chart-line"></i>
                     <span>Dashboard</span>
                 </a>
+                <a href="#" class="menu-item" data-tab="cronograma">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <span>Cronograma</span>
+                </a>
                 <a href="#" class="menu-item" data-tab="edital">
                     <i class="fa-solid fa-book-bookmark"></i>
                     <span>Controle Edital</span>
@@ -205,6 +209,26 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- ABA: CRONOGRAMA COMPLETO -->
+                <section id="tab-cronograma" class="tab-pane">
+                    <div class="tab-header-actions">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="crono-search" placeholder="Buscar no cronograma...">
+                        </div>
+                        <div class="filter-toggles">
+                            <button class="btn btn-outline active" id="btn-crono-all">Todos</button>
+                            <button class="btn btn-outline" id="btn-crono-pending">Pendentes</button>
+                            <button class="btn btn-outline" id="btn-crono-completed">Concluídos</button>
+                        </div>
+                    </div>
+
+                    <div class="crono-timeline" id="crono-timeline-list">
+                        <!-- Preenchido via Javascript -->
+                        <p class="empty-state">Carregando cronograma...</p>
                     </div>
                 </section>
 
