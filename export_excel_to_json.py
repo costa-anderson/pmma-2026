@@ -3,11 +3,16 @@ import json
 import os
 from datetime import datetime
 
-file_path = r"C:\Users\and_g\Desktop\PMMA 26\Plano_de_Estudos_PMMA_2026.xlsm"
+file_path_xlsx = r"C:\Users\and_g\Desktop\PMMA 26\Plano_de_Estudos_PMMA_2026.xlsx"
+file_path_xlsm = r"C:\Users\and_g\Desktop\PMMA 26\Plano_de_Estudos_PMMA_2026.xlsm"
 output_path = r"C:\Users\and_g\Desktop\PMMA 26\pmma_data_export.json"
 
-if not os.path.exists(file_path):
-    print(f"Erro: Planilha não encontrada em {file_path}")
+if os.path.exists(file_path_xlsx):
+    file_path = file_path_xlsx
+elif os.path.exists(file_path_xlsm):
+    file_path = file_path_xlsm
+else:
+    print("Erro: Nenhuma planilha Plano_de_Estudos_PMMA_2026 (.xlsx ou .xlsm) encontrada no Desktop.")
     exit(1)
 
 print("Carregando planilha...")

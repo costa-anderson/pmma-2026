@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QG PMMA 2026 - Painel Tático V2</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Sidebar Glassmórfica -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-person-military-pointing brand-icon"></i>
+                <div class="brand-text">
+                    <h1>QG PMMA v2</h1>
+                    <span>DASHBOARD ENXUTO</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Painel Tático</span>
+                </a>
+                <a href="#" class="menu-item" data-tab="cronograma">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <span>Cronograma</span>
+                </a>
+                <a href="#" class="menu-item" data-tab="edital">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Controle Edital</span>
+                </a>
+                <a href="#" class="menu-item" data-tab="desempenho">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Desempenho</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="sync-badge synced" id="sync-status">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span id="sync-text">Plano Ativo (V2)</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Área de Conteúdo -->
+        <main class="main-content">
+            
+            <!-- Cabeçalho (Top Bar) -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h2 id="current-tab-title">Painel Tático</h2>
+                    <p id="current-tab-desc">Visão geral do seu progresso, metas e estatísticas.</p>
+                </div>
+                
+                <div class="header-actions">
+                    <!-- Contador Regressivo -->
+                    <div class="countdown-container">
+                        <i class="fa-solid fa-clock"></i>
+                        <span id="countdown-timer">Carregando contagem regressiva...</span>
+                    </div>
+                    
+                    <!-- Toggle Light/Dark Mode -->
+                    <button class="theme-toggle" id="theme-toggle-btn" title="Alternar Tema">
+                        <i class="fa-solid fa-sun icon-sun"></i>
+                        <i class="fa-solid fa-moon icon-moon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Container das Telas (Abas) -->
+            <div class="tab-content-container">
+
+                <!-- ABA 1: DASHBOARD -->
+                <section id="tab-dashboard" class="tab-pane active">
+                    <!-- Cards de Métricas Rápidas -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="card-icon blue"><i class="fa-solid fa-hourglass-half"></i></div>
+                            <div class="card-info">
+                                <h3>Total Estudado</h3>
+                                <span class="metric-value" id="val-total-hours">0h 0m</span>
+                                <span class="metric-trend" id="val-total-sessions">0 tópicos concluídos</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="card-icon green"><i class="fa-solid fa-circle-check"></i></div>
+                            <div class="card-info">
+                                <h3>Acerto Questões</h3>
+                                <span class="metric-value" id="val-accuracy">0.0%</span>
+                                <span class="metric-trend" id="val-total-questions">0 resolvidas / 0 acertos</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="card-icon orange"><i class="fa-solid fa-book"></i></div>
+                            <div class="card-info">
+                                <h3>Progresso Edital</h3>
+                                <span class="metric-value" id="val-edital-pct">0.0%</span>
+                                <span class="metric-trend" id="val-edital-ratio">0 de 0 tópicos</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="card-icon red"><i class="fa-solid fa-medal"></i></div>
+                            <div class="card-info">
+                                <h3>Status TAF</h3>
+                                <span class="metric-value" id="val-taf-status">Pendente</span>
+                                <span class="metric-trend" id="val-taf-trend">Aguardando registro</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Divisão Dashboard -->
+                    <div class="dashboard-layout">
+                        <!-- Esquerda: Hoje -->
+                        <div class="dashboard-left">
+                            <div class="panel-card today-studies-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-calendar-day"></i> Planejamento para Hoje</h3>
+                                    <span class="badge" id="today-date-badge">--/--/----</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="today-list" id="today-studies-list">
+                                        <!-- Carregado via JS -->
+                                        <p style="color: var(--text-muted); font-size: 0.9rem;">Carregando planejamento de hoje...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="panel-card quick-log-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-keyboard"></i> Registro Rápido</h3>
+                                </div>
+                                <div class="card-body" style="display: flex; gap: 1rem;">
+                                    <button class="btn btn-primary" id="btn-quick-study"><i class="fa-solid fa-plus"></i> Estudo</button>
+                                    <button class="btn" id="btn-quick-simulado"><i class="fa-solid fa-pen-ruler"></i> Simulado</button>
+                                    <button class="btn" id="btn-quick-taf"><i class="fa-solid fa-dumbbell"></i> Treino/TAF</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Direita: Gráficos de Evolução -->
+                        <div class="dashboard-right">
+                            <div class="panel-card chart-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-chart-column"></i> Progresso por Matéria</h3>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="chart-subjects-progress"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ABA 2: CRONOGRAMA -->
+                <section id="tab-cronograma" class="tab-pane">
+                    <div class="filter-bar">
+                        <input type="text" id="search-crono" class="search-input" placeholder="Buscar por tema ou matéria...">
+                        <select id="filter-crono-status" class="select-input">
+                            <option value="todos">Todos os Status</option>
+                            <option value="concluido">Estudados</option>
+                            <option value="pendente">Pendentes</option>
+                        </select>
+                        <select id="filter-crono-week" class="select-input">
+                            <option value="todas">Todas as Semanas</option>
+                            <!-- Inserido dinamicamente via JS -->
+                        </select>
+                    </div>
+
+                    <div class="crono-weeks-container" id="crono-weeks-list">
+                        <!-- Carregado dinamicamente via JS -->
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Carregando cronograma...</p>
+                    </div>
+                </section>
+
+                <!-- ABA 3: CONTROLE EDITAL -->
+                <section id="tab-edital" class="tab-pane">
+                    <div class="filter-bar">
+                        <input type="text" id="search-edital" class="search-input" placeholder="Buscar matéria ou tópico...">
+                        <select id="filter-edital-subject" class="select-input">
+                            <option value="todos">Todas as Matérias</option>
+                            <!-- Inserido dinamicamente via JS -->
+                        </select>
+                        <select id="filter-edital-status" class="select-input">
+                            <option value="todos">Todos os Status</option>
+                            <option value="estudado">Estudado</option>
+                            <option value="pendente">Não Estudado</option>
+                        </select>
+                    </div>
+
+                    <div class="panel-card table-container">
+                        <table class="data-table" id="edital-table">
+                            <thead>
+                                <tr>
+                                    <th>Matéria</th>
+                                    <th>Tópico</th>
+                                    <th>Probabilidade</th>
+                                    <th>Relevância</th>
+                                    <th>Estudado?</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="edital-table-body">
+                                <!-- Carregado dinamicamente via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ABA 4: DESEMPENHO -->
+                <section id="tab-desempenho" class="tab-pane">
+                    <div class="desempenho-grid">
+                        
+                        <!-- Coluna 1: Simulados -->
+                        <div class="desempenho-col">
+                            <div class="panel-card" style="margin-bottom: 1.5rem;">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-scroll"></i> Histórico de Simulados</h3>
+                                    <button class="btn btn-primary" id="btn-add-simulado-perf"><i class="fa-solid fa-plus"></i> Novo</button>
+                                </div>
+                                <div class="table-container">
+                                    <table class="data-table" id="simulados-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Nº</th>
+                                                <th>Data</th>
+                                                <th>Gerais (P1)</th>
+                                                <th>Específicos (P2)</th>
+                                                <th>Nota Final</th>
+                                                <th>Tempo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="simulados-table-body">
+                                            <!-- Carregado via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Gráfico Simulados -->
+                            <div class="panel-card chart-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-chart-line"></i> Evolução das Notas</h3>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="chart-simulados-progress"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Coluna 2: TAF Semanal -->
+                        <div class="desempenho-col">
+                            <div class="panel-card" style="margin-bottom: 1.5rem;">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-dumbbell"></i> Testes Semanais do TAF</h3>
+                                    <button class="btn btn-primary" id="btn-add-taf-perf"><i class="fa-solid fa-plus"></i> Novo</button>
+                                </div>
+                                <div class="table-container">
+                                    <table class="data-table" id="taf-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Barra</th>
+                                                <th>Sugado</th>
+                                                <th>Abdo.</th>
+                                                <th>Corrida</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="taf-table-body">
+                                            <!-- Carregado via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Gráfico TAF -->
+                            <div class="panel-card chart-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-chart-area"></i> Evolução do Treino</h3>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="chart-taf-progress"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL 1: REGISTRO DE ESTUDO (CRONOGRAMA / EDITAL) -->
+    <div class="modal" id="modal-log-study">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-graduation-cap"></i> Registrar Sessão de Estudo</h3>
+                <button class="close-btn" id="close-modal-study">&times;</button>
+            </div>
+            <form id="form-study-log">
+                <input type="hidden" id="form-study-index">
+                <input type="hidden" id="form-study-source"> <!-- 'crono' ou 'edital' -->
+                
+                <div class="form-group">
+                    <label>Matéria</label>
+                    <input type="text" id="form-study-subject" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Tópico / Tema</label>
+                    <input type="text" id="form-study-topic" class="form-input" readonly>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-study-completed">Estudado?</label>
+                        <select id="form-study-completed" class="form-input">
+                            <option value="sim">Sim</option>
+                            <option value="nao">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-study-duration">Tempo de Estudo (min)</label>
+                        <input type="number" id="form-study-duration" class="form-input" min="0" value="0">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-study-questions-done">Fez Questões?</label>
+                        <select id="form-study-questions-done" class="form-input">
+                            <option value="sim">Sim</option>
+                            <option value="nao">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-study-questions">Qtd. de Questões</label>
+                        <input type="number" id="form-study-questions" class="form-input" min="0" value="0">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="form-study-correct">Acertos</label>
+                    <input type="number" id="form-study-correct" class="form-input" min="0" value="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="form-study-notes">Observações / Anotações</label>
+                    <input type="text" id="form-study-notes" class="form-input" placeholder="O que achou do assunto?">
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn" id="btn-cancel-study">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Registro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: NOVO SIMULADO -->
+    <div class="modal" id="modal-log-simulado">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-scroll"></i> Registrar Novo Simulado</h3>
+                <button class="close-btn" id="close-modal-simulado">&times;</button>
+            </div>
+            <form id="form-simulado-log">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-sim-num">Nº Simulado</label>
+                        <input type="number" id="form-sim-num" class="form-input" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-sim-date">Data</label>
+                        <input type="date" id="form-sim-date" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-sim-p1-q">Questões P1 (Gerais)</label>
+                        <input type="number" id="form-sim-p1-q" class="form-input" min="0" value="40" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-sim-p1-c">Acertos P1</label>
+                        <input type="number" id="form-sim-p1-c" class="form-input" min="0" value="0" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-sim-p2-q">Questões P2 (Específicos)</label>
+                        <input type="number" id="form-sim-p2-q" class="form-input" min="0" value="40" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-sim-p2-c">Acertos P2</label>
+                        <input type="number" id="form-sim-p2-c" class="form-input" min="0" value="0" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-sim-score">Nota Final (0-120)</label>
+                        <input type="number" id="form-sim-score" class="form-input" min="0" max="120" step="0.1" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-sim-duration">Tempo Gasto (HH:MM:SS)</label>
+                        <input type="text" id="form-sim-duration" class="form-input" placeholder="03:30:00" value="03:00:00">
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn" id="btn-cancel-simulado">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: NOVO TESTE TAF -->
+    <div class="modal" id="modal-log-taf">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-dumbbell"></i> Registrar Novo Teste TAF</h3>
+                <button class="close-btn" id="close-modal-taf">&times;</button>
+            </div>
+            <form id="form-taf-log">
+                <div class="form-group">
+                    <label for="form-taf-date">Data do Teste</label>
+                    <input type="date" id="form-taf-date" class="form-input" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-taf-pullups">Barra (repetições)</label>
+                        <input type="number" id="form-taf-pullups" class="form-input" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-taf-sugado">Meio Sugado (reps/1min)</label>
+                        <input type="number" id="form-taf-sugado" class="form-input" min="0" value="0" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-taf-abdominal">Abdominal (reps/1min)</label>
+                        <input type="number" id="form-taf-abdominal" class="form-input" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-taf-running">Corrida 12min (metros)</label>
+                        <input type="number" id="form-taf-running" class="form-input" min="0" step="50" value="1000" required>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn" id="btn-cancel-taf">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script de Lógica -->
+    <script src="app2.js"></script>
+</body>
+</html>

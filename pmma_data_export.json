@@ -34,7 +34,7 @@
       "a2": "Noções de sistema operacional (ambientes Linux e Windows) e gerenciamento de arquivos/pastas.",
       "ciclo": "Revisão Dia Anterior (20m) -> Teoria do Dia (20%) -> Questões Cebraspe (80%)",
       "foco": "80% Questões / 20% Teoria (Pareto)",
-      "completed": false
+      "completed": true
     },
     {
       "date": "17/07/2026",
@@ -46,7 +46,7 @@
       "a2": "França equinocial: expedição de Daniel de La Touche.",
       "ciclo": "Revisão Dia Anterior (20m) -> Teoria do Dia (20%) -> Questões Cebraspe (80%)",
       "foco": "80% Questões / 20% Teoria (Pareto)",
-      "completed": false
+      "completed": true
     },
     {
       "date": "18/07/2026",
@@ -1073,9 +1073,9 @@
     {
       "subject": "Língua Portuguesa",
       "topic": "Compreensão e interpretação de textos de gêneros variados. Reconhecimento de tipos e gêneros textuais.",
-      "studied": false,
-      "questions": 20,
-      "correct": 18,
+      "studied": true,
+      "questions": 28,
+      "correct": 24,
       "revisionStatus": "Pendente"
     },
     {
@@ -1233,7 +1233,7 @@
     {
       "subject": "História do Brasil",
       "topic": "A contribuição dos índios e negros para a formação do Brasil.",
-      "studied": false,
+      "studied": true,
       "questions": 0,
       "correct": 0,
       "revisionStatus": "Pendente"
@@ -1329,9 +1329,9 @@
     {
       "subject": "História do Maranhão",
       "topic": "França equinocial: expedição de Daniel de La Touche.",
-      "studied": false,
-      "questions": 0,
-      "correct": 0,
+      "studied": true,
+      "questions": 20,
+      "correct": 20,
       "revisionStatus": "Pendente"
     },
     {
@@ -1425,9 +1425,9 @@
     {
       "subject": "Geografia do Brasil",
       "topic": "A integração ao processo de internacionalização da economia.",
-      "studied": false,
-      "questions": 35,
-      "correct": 35,
+      "studied": true,
+      "questions": 20,
+      "correct": 20,
       "revisionStatus": "Pendente"
     },
     {
@@ -1505,7 +1505,7 @@
     {
       "subject": "Geografia do Maranhão",
       "topic": "Localização do Estado do Maranhão: superfície, limites, fronteiras, pontos extremos.",
-      "studied": false,
+      "studied": true,
       "questions": 20,
       "correct": 20,
       "revisionStatus": "Pendente"
@@ -1689,7 +1689,7 @@
     {
       "subject": "Legislação Institucional",
       "topic": "Lei Estadual nº 6.513/1995 (Estatuto) - Deveres, Obrigações e Ética Policial-Militar.",
-      "studied": false,
+      "studied": true,
       "questions": 0,
       "correct": 0,
       "revisionStatus": "Pendente"
@@ -1729,9 +1729,9 @@
     {
       "subject": "Noções de Informática",
       "topic": "Noções de sistema operacional (ambientes Linux e Windows) e gerenciamento de arquivos/pastas.",
-      "studied": false,
-      "questions": 0,
-      "correct": 0,
+      "studied": true,
+      "questions": 30,
+      "correct": 25,
       "revisionStatus": "Pendente"
     },
     {
@@ -1813,11 +1813,11 @@
       "questions": 15,
       "correct": 13,
       "errors": 2,
-      "accuracy": 0.8666666666666667,
+      "accuracy": 0.8666666667,
       "notes": "O PowerPoint 2007 (e as versões mais recentes) possui um recurso nativo de impressão chamado \"Folhetos\". Ele permite economizar papel imprimindo múltiplos eslaides na mesma folha, nas opções exatas de: 1, 2, 3, 4, 6 e até 9 eslaides por página.\nA partir da versão 2007 do Microsoft Office, a Microsoft introduziu o padrão XML. Com isso, os arquivos ganharam um \"x\" no final. Portanto, o padrão oficial do Word 2007 passou a ser .docx (o Excel virou .xlsx e o PowerPoint .pptx)."
     },
     {
-      "date": "16/07/2026",
+      "date": "19/07/2026",
       "subject": "História do Brasil",
       "topic": "A contribuição dos índios e negros para a formação do Brasil",
       "type": "Teoria",
@@ -1829,9 +1829,81 @@
       "notes": ""
     },
     {
-      "date": "16/07/2026",
+      "date": "19/07/2026",
       "subject": "Geografia do Maranhão",
       "topic": "Localização do Estado do Maranhão: superfície, limites, fronteiras, pontos extremos.",
+      "type": "Teoria",
+      "duration": 60,
+      "questions": 20,
+      "correct": 20,
+      "errors": 0,
+      "accuracy": 1.0,
+      "notes": ""
+    },
+    {
+      "date": "16/07/2026",
+      "subject": "Noções de Informática",
+      "topic": "Noções de sistema operacional (ambientes Linux e Windows) e gerenciamento de arquivos/pastas.",
+      "type": "Teoria",
+      "duration": 90,
+      "questions": 30,
+      "correct": 25,
+      "errors": 5,
+      "accuracy": 0.8333333333333334,
+      "notes": "O windows explorer alem de acessar pastas permite acessar ferramentas, tal qual o painel de controle.\nA opção salvar como, nao sobreescreve obrigatoriamente um arquivo, ele pode, e de igual forma pode tambem criar um novo.\nAnexar um arquivo no email, nao move o arquvio para o servidor, apenas cria uma copia do mesmo.\nO Shell interpreta as entradas do usuário e as traduz para instruções que o núcleo do sistema (Kernel) possa processar.\nO firewall controla o trafego de dados e acessos nao autorizados, quem lida com virus e arquivos maliciosos é o antivirus."
+    },
+    {
+      "date": "16/07/2026",
+      "subject": "Noções de Informática",
+      "topic": "Noções de sistema operacional (ambientes Linux e Windows) e gerenciamento de arquivos/pastas.",
+      "type": "Teoria",
+      "duration": 90,
+      "questions": 30,
+      "correct": 25,
+      "errors": 5,
+      "accuracy": 0.8333333333333334,
+      "notes": "O windows explorer alem de acessar pastas permite acessar ferramentas, tal qual o painel de controle.\nA opção salvar como, nao sobreescreve obrigatoriamente um arquivo, ele pode, e de igual forma pode tambem criar um novo.\nAnexar um arquivo no email, nao move o arquvio para o servidor, apenas cria uma copia do mesmo.\nO Shell interpreta as entradas do usuário e as traduz para instruções que o núcleo do sistema (Kernel) possa processar.\nO firewall controla o trafego de dados e acessos nao autorizados, quem lida com virus e arquivos maliciosos é o antivirus."
+    },
+    {
+      "date": "16/07/2026",
+      "subject": "Língua Portuguesa",
+      "topic": "Compreensão e interpretação de textos de gêneros variados. Reconhecimento de tipos e gêneros textuais.",
+      "type": "Teoria",
+      "duration": 60,
+      "questions": 28,
+      "correct": 24,
+      "errors": 4,
+      "accuracy": 0.8571428571428571,
+      "notes": ""
+    },
+    {
+      "date": "16/07/2026",
+      "subject": "Língua Portuguesa",
+      "topic": "Compreensão e interpretação de textos de gêneros variados. Reconhecimento de tipos e gêneros textuais.",
+      "type": "Teoria",
+      "duration": 60,
+      "questions": 28,
+      "correct": 24,
+      "errors": 4,
+      "accuracy": 0.8571428571428571,
+      "notes": ""
+    },
+    {
+      "date": "17/07/2026",
+      "subject": "História do Maranhão",
+      "topic": "França equinocial: expedição de Daniel de La Touche.",
+      "type": "Teoria",
+      "duration": 90,
+      "questions": 20,
+      "correct": 20,
+      "errors": 0,
+      "accuracy": 1.0,
+      "notes": ""
+    },
+    {
+      "date": "14/07/2026",
+      "subject": "Geografia do Brasil",
+      "topic": "A integração ao processo de internacionalização da economia.",
       "type": "Teoria",
       "duration": 60,
       "questions": 20,
@@ -1845,10 +1917,10 @@
     {
       "date": "19/07/2026",
       "exercise": "Barra Fixa",
-      "result": 5.0,
+      "result": 1.0,
       "target": 4.0,
-      "accuracy": 1.25,
-      "status": "META ALCANÇADA",
+      "accuracy": 0.25,
+      "status": "ABAIXO DA META",
       "sets": 1,
       "restTime": 0,
       "duration": 0

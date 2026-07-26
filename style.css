@@ -1477,3 +1477,168 @@ textarea {
 .btn-crono-completed-toggle:hover .text-hover-undo {
     display: inline;
 }
+
+/* ==========================================================================
+   ABA 7: Resolver Questões (Estilos Específicos)
+   ========================================================================== */
+.questoes-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    margin-top: 10px;
+}
+@media (max-width: 900px) {
+    .questoes-layout {
+        grid-template-columns: 1fr;
+    }
+}
+.questoes-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.questoes-main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.questoes-stats-box {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid var(--border-light);
+}
+.questoes-stats-item {
+    text-align: center;
+}
+.questoes-stats-val {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: var(--font-heading);
+}
+.questoes-stats-val.success { color: var(--success); }
+.questoes-stats-val.danger { color: var(--danger); }
+
+.question-card {
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.question-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.meta-tag {
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+}
+.meta-tag.hot {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+    font-weight: 600;
+}
+.question-statement {
+    font-size: 15px;
+    line-height: 1.7;
+    margin-bottom: 30px;
+    color: var(--text-primary);
+}
+.question-statement b {
+    color: var(--accent);
+}
+.question-actions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.cebraspe-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+.btn-certo, .btn-errado {
+    padding: 18px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font-heading);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+.btn-certo {
+    background: var(--success-bg);
+    color: var(--success);
+    border-color: rgba(16, 185, 129, 0.15);
+}
+.btn-certo:hover:not(:disabled) {
+    background: var(--success);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+}
+.btn-errado {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-color: rgba(239, 68, 68, 0.15);
+}
+.btn-errado:hover:not(:disabled) {
+    background: var(--danger);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+.btn-certo.selected {
+    background: var(--success);
+    color: #fff;
+    border-color: #0d9488;
+}
+.btn-errado.selected {
+    background: var(--danger);
+    color: #fff;
+    border-color: #b91c1c;
+}
+.btn-certo:disabled, .btn-errado:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.feedback-panel {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 10px;
+    animation: fadeIn 0.3s ease;
+}
+.feedback-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+.feedback-header.hit { color: var(--success); }
+.feedback-header.miss { color: var(--danger); }
+
+.feedback-comment {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+

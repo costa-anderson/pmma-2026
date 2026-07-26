@@ -4,90 +4,61 @@
 
 // Configuração Padrão do Edital & Mapeamento do Tenente (Prioridades)
 const DEFAULT_SYLLABUS = [
-    // LÍNGUA PORTUGUESA
-    { subject: "Língua Portuguesa", topic: "Compreensão e interpretação de textos de gêneros variados. Reconhecimento de tipos e gêneros textuais.", hot: true, weight: "35% (Interpretação)" },
-    { subject: "Língua Portuguesa", topic: "Domínio dos mecanismos de coesão textual (emprego de elementos de referenciação, substituição, repetição).", hot: true, weight: "23% (Coesão)" },
-    { subject: "Língua Portuguesa", topic: "Domínio da ortografia oficial (dígrafo, encontros vocálicos/consonantais).", hot: false },
-    { subject: "Língua Portuguesa", topic: "Acentuação gráfica oficial.", hot: false },
-    { subject: "Língua Portuguesa", topic: "Emprego das classes de palavras: Substantivo e Adjetivo.", hot: false },
-    { subject: "Língua Portuguesa", topic: "Emprego das classes de palavras: Artigo, Numeral e Interjeição.", hot: false },
-    { subject: "Língua Portuguesa", topic: "Emprego das classes de palavras: Pronome (pessoais, possessivos, demonstrativos, etc.).", hot: false },
-    { subject: "Língua Portuguesa", topic: "Emprego das classes de palavras: Advérbio e Preposição.", hot: false },
-    { subject: "Língua Portuguesa", topic: "Emprego das classes de palavras: Conjunção (coordenativas e subordinativas).", hot: true, weight: "23% (Conectivos)" },
-    { subject: "Língua Portuguesa", topic: "Emprego de tempos e modos verbais. Flexão e vozes verbais.", hot: false },
-    { subject: "Língua Portuguesa", topic: "Relações de coordenação entre orações e entre termos da oração.", hot: false },
-    { subject: "Língua Portuguesa", topic: "Relações de subordinação entre orações e entre termos da oração.", hot: false },
+    // LÍNGUA PORTUGUESA (Ordem Linear da Base ao Avançado)
+    { subject: "Língua Portuguesa", topic: "Morfologia I - Classes de palavras variáveis (Substantivo, Adjetivo, Artigo, Numeral).", hot: false },
+    { subject: "Língua Portuguesa", topic: "Morfologia II - Emprego e flexão dos Pronomes (pessoais, demonstrativos, possessivos, etc.).", hot: false },
+    { subject: "Língua Portuguesa", topic: "Morfologia III - Emprego de tempos e modos verbais. Flexão e vozes verbais.", hot: false },
+    { subject: "Língua Portuguesa", topic: "Conjunções (coordenativas e subordinativas) e Conectivos. Coesão textual.", hot: true, weight: "23% (Conectivos/Coesão)" },
+    { subject: "Língua Portuguesa", topic: "Ortografia oficial, acentuação gráfica oficial e emprego do hífen.", hot: false },
+    { subject: "Língua Portuguesa", topic: "Sintaxe da oração e do período (coordenação e subordinação).", hot: false },
     { subject: "Língua Portuguesa", topic: "Concordância verbal e nominal.", hot: true, weight: "27% (Morfossintaxe)" },
     { subject: "Língua Portuguesa", topic: "Regência verbal e nominal.", hot: true, weight: "27% (Morfossintaxe)" },
     { subject: "Língua Portuguesa", topic: "Emprego do sinal indicativo de crase.", hot: false },
-    { subject: "Língua Portuguesa", topic: "Colocação dos pronomes átonos (próclise, mesóclise, ênclise).", hot: false },
-    { subject: "Língua Portuguesa", topic: "Emprego dos sinais de pontuação (vírgula, dois-pontos, etc.).", hot: false },
-    { subject: "Língua Portuguesa", topic: "Significação das palavras (sinônimos, antônimos, homônimos, parônimos).", hot: false },
-    { subject: "Língua Portuguesa", topic: "Substituição de palavras ou de trechos de texto.", hot: true, weight: "23% (Reescrita)" },
-    { subject: "Língua Portuguesa", topic: "Reorganização da estrutura de orações e de períodos do texto. Reescrita de textos de diferentes gêneros e níveis de formalidade.", hot: true, weight: "23% (Reescrita)" },
+    { subject: "Língua Portuguesa", topic: "Emprego dos sinais de pontuação (especialmente a vírgula).", hot: false },
+    { subject: "Língua Portuguesa", topic: "Reorganização da estrutura de orações e períodos. Reescrita de textos.", hot: true, weight: "23% (Reescrita)" },
+    { subject: "Língua Portuguesa", topic: "Compreensão e interpretação de textos de gêneros variados.", hot: true, weight: "35% (Interpretação)" },
 
     // HISTÓRIA DO BRASIL
-    { subject: "História do Brasil", topic: "A contribuição dos índios e negros para a formação do Brasil.", hot: false },
-    { subject: "História do Brasil", topic: "A formação do Brasil Contemporâneo.", hot: false },
-    { subject: "História do Brasil", topic: "A República Velha e as estruturas oligárquicas.", hot: true, weight: "30% (República Velha)" },
-    { subject: "História do Brasil", topic: "Economia e Sociedade na República Velha: o café e estratificação social.", hot: true, weight: "30% (República Velha)" },
-    { subject: "História do Brasil", topic: "A Revolução de 1930.", hot: true, weight: "28% (Era Vargas)" },
-    { subject: "História do Brasil", topic: "A Era Vargas: política, economia e sociedade (1930-1945).", hot: true, weight: "28% (Era Vargas)" },
-    { subject: "História do Brasil", topic: "O período democrático (1945 a 1964): Redemocratização e constituição de 1946.", hot: false },
-    { subject: "História do Brasil", topic: "A política de industrialização do governo JK.", hot: false },
-    { subject: "História do Brasil", topic: "A crise do regime democrático (década de 1960).", hot: false },
-    { subject: "História do Brasil", topic: "O golpe de 1964 e o regime militar.", hot: true, weight: "25% (Ditadura Militar)" },
-    { subject: "História do Brasil", topic: "A crise do regime militar e a redemocratização do Brasil.", hot: true, weight: "25% (Redemocratização)" },
-    { subject: "História do Brasil", topic: "O Brasil político: nação e território, organização do Estado e evolução das Constituições.", hot: false },
+    { subject: "História do Brasil", topic: "República Velha e estruturas oligárquicas (café, coronelismo e voto de cabresto).", hot: true, weight: "30% (República Velha)" },
+    { subject: "História do Brasil", topic: "Revolução de 1930 e Era Vargas (política, economia e sociedade).", hot: true, weight: "28% (Era Vargas)" },
+    { subject: "História do Brasil", topic: "Ditadura Militar e redemocratização do Brasil (golpe de 64, regressão e abertura).", hot: true, weight: "25% (Ditadura/Redemocr.)" },
+    { subject: "História do Brasil", topic: "A contribuição dos índios e negros para a formação do Brasil contemporâneo.", hot: false },
 
     // HISTÓRIA DO MARANHÃO
-    { subject: "História do Maranhão", topic: "França equinocial: expedição de Daniel de La Touche.", hot: true, weight: "29% (França Equinocial)" },
-    { subject: "História do Maranhão", topic: "Fundação de São Luís e Batalha de Guaxenduba (1615).", hot: true, weight: "29% (Guaxenduba)" },
-    { subject: "História do Maranhão", topic: "Capitães-mores do Maranhão.", hot: false },
+    { subject: "História do Maranhão", topic: "França Equinocial, fundação de São Luís e Guaxenduba (1615).", hot: true, weight: "29% (França Equinocial)" },
+    { subject: "História do Maranhão", topic: "Revolta de Beckman e Estado do Maranhão e Grão-Pará (Companhia de Comércio).", hot: true, weight: "26% (Revolta de Beckman)" },
+    { subject: "História do Maranhão", topic: "Independência do Maranhão, Batalha do Jenipapo e Balaiada.", hot: true, weight: "25% (Independência/Balaiada)" },
     { subject: "História do Maranhão", topic: "Invasão holandesa (1641-1644) e Expulsão dos holandeses.", hot: false },
-    { subject: "História do Maranhão", topic: "Estado do Maranhão e Grão-Pará: Revolta de Bequimão (causas e objetivos da revolta).", hot: true, weight: "26% (Revolta de Beckman)" },
-    { subject: "História do Maranhão", topic: "Companhia de Comércio do Maranhão e Grão-Pará.", hot: false },
-    { subject: "História do Maranhão", topic: "Período do Império: adesão do Maranhão à Independência do Brasil.", hot: true, weight: "25% (Independência MA)" },
-    { subject: "História do Maranhão", topic: "Causas da não adesão inicial do Maranhão e Batalha do Jenipapo.", hot: true, weight: "25% (Batalha Jenipapo)" },
-    { subject: "História do Maranhão", topic: "Balaiada (1838-1841): caracterização e causas do movimento.", hot: true, weight: "25% (Balaiada)" },
 
     // GEOGRAFIA DO BRASIL
-    { subject: "Geografia do Brasil", topic: "População, urbanização e migrações internas.", hot: true, weight: "30% (População/Urb)" },
-    { subject: "Geografia do Brasil", topic: "A estrutura urbana brasileira e redes de cidades.", hot: true, weight: "30% (População/Urb)" },
-    { subject: "Geografia do Brasil", topic: "O processo de industrialização e suas repercussões na organização do espaço.", hot: true, weight: "28% (Industrialização)" },
-    { subject: "Geografia do Brasil", topic: "A integração ao processo de internacionalização da economia.", hot: true, weight: "28% (Economia)" },
-    { subject: "Geografia do Brasil", topic: "Fronteiras agrícolas, estrutura fundiária e agropecuária.", hot: true, weight: "24% (Agro/Fronteira)" },
-    { subject: "Geografia do Brasil", topic: "A rede brasileira de transportes e energia.", hot: false },
+    { subject: "Geografia do Brasil", topic: "População, urbanização e migrações internas no Brasil.", hot: true, weight: "30% (População/Urb)" },
+    { subject: "Geografia do Brasil", topic: "Industrialização, economia e organização do espaço brasileiro.", hot: true, weight: "28% (Industrialização)" },
+    { subject: "Geografia do Brasil", topic: "Fronteiras agrícolas, estrutura fundiária e agropecuária.", hot: true, weight: "24% (Agropecuária)" },
+    { subject: "Geografia do Brasil", topic: "A rede brasileira de transportes, comunicação e energia.", hot: false },
 
     // GEOGRAFIA DO MARANHÃO
-    { subject: "Geografia do Maranhão", topic: "Localização do Estado do Maranhão: superfície, limites, fronteiras, pontos extremos.", hot: false },
-    { subject: "Geografia do Maranhão", topic: "Climas do Maranhão: pluviosidade e temperatura.", hot: true, weight: "31% (Clima/Relevo)" },
-    { subject: "Geografia do Maranhão", topic: "Geomorfologia e Classificação do relevo maranhense.", hot: true, weight: "31% (Clima/Relevo)" },
-    { subject: "Geografia do Maranhão", topic: "Características dos rios maranhenses (Hidrografia).", hot: true, weight: "31% (Clima/Relevo)" },
-    { subject: "Geografia do Maranhão", topic: "Vegetação nativa e ecossistemas (cerrado, cocais, mangues).", hot: true, weight: "31% (Vegetação)" },
-    { subject: "Geografia do Maranhão", topic: "População, povoamento e movimentos populacionais.", hot: true, weight: "26% (População)" },
+    { subject: "Geografia do Maranhão", topic: "Clima, relevo, hidrografia e vegetação maranhense.", hot: true, weight: "31% (Aspectos Naturais)" },
+    { subject: "Geografia do Maranhão", topic: "População, povoamento e movimentos populacionais no Maranhão.", hot: true, weight: "26% (População)" },
     { subject: "Geografia do Maranhão", topic: "Agricultura, extrativismo, indústria e setor terciário no Maranhão.", hot: true, weight: "25% (Setores Econômicos)" },
 
     // LEGISLAÇÃO PERTINENTE À PMMA
-    { subject: "Legislação Pertinente à PMMA", topic: "Decreto nº 88.777/1983 (R-200) e suas alterações - Capítulos I a III (Conceitos básicos, subordinação).", hot: false },
-    { subject: "Legislação Pertinente à PMMA", topic: "Decreto nº 88.777/1983 (R-200) - Capítulos IV a VI (Hierarquia, uso de uniformes, controle).", hot: false },
-    { subject: "Legislação Pertinente à PMMA", topic: "Decreto-lei nº 1.001/1969 (Código Penal Militar) - Crimes Militares em tempo de paz.", hot: true, weight: "25% (Código Penal Mil)" },
-    { subject: "Legislação Pertinente à PMMA", topic: "Decreto-lei nº 1.001/1969 - Penas principais e acessórias.", hot: true, weight: "25% (Código Penal Mil)" },
-    { subject: "Legislação Pertinente à PMMA", topic: "Lei Federal nº 14.751/2023 (Lei Orgânica Nacional das Polícias Militares e Corpos de Bombeiros).", hot: true, weight: "20% (Lei Orgânica Nac)" },
+    { subject: "Legislação pertinente à PMMA", topic: "Estatuto dos Policiais Militares do Maranhão (Lei Estadual nº 6.513/1995).", hot: true, weight: "35% (Estatuto PMMA)" },
+    { subject: "Legislação pertinente à PMMA", topic: "Código Penal Militar (Decretos-Leis aplicados).", hot: true, weight: "25% (CPM)" },
+    { subject: "Legislação pertinente à PMMA", topic: "Lei Orgânica Nacional das Polícias Militares (Lei Federal nº 14.751/2023).", hot: true, weight: "20% (Lei Orgânica)" },
 
     // LEGISLAÇÃO INSTITUCIONAL
-    { subject: "Legislação Institucional", topic: "Lei Estadual nº 6.513/1995 (Estatuto) - Deveres, Obrigações e Ética Policial-Militar.", hot: true, weight: "35% (Estatuto PMMA)" },
-    { subject: "Legislação Institucional", topic: "Lei Estadual nº 6.513/1995 - Direitos e Prerrogativas dos Policiais Militares.", hot: true, weight: "35% (Estatuto PMMA)" },
-    { subject: "Legislação Institucional", topic: "Hierarquia, disciplina, postos, graduações e precedência.", hot: true, weight: "30% (Hierarquia/Discip)" },
-    { subject: "Legislação Institucional", topic: "Direitos, deveres, ética e obrigações policiais militares.", hot: true, weight: "27% (Ética/Direitos)" },
-    { subject: "Legislação Institucional", topic: "Ingresso, carreira e situações do policial militar.", hot: true, weight: "23% (Ingresso/Carreira)" },
+    { subject: "Legislação Institucional", topic: "Hierarquia, disciplina, postos, graduações e precedência policial militar.", hot: true, weight: "30% (Hierarquia/Disc)" },
+    { subject: "Legislação Institucional", topic: "Direitos, deveres, ética e obrigações policiais militares.", hot: true, weight: "27% (Ética/Deveres)" },
+    { subject: "Legislação Institucional", topic: "Ingresso, carreira e situações do policial militar (Lei nº 12.896/2026).", hot: true, weight: "23% (Carreira/Situações)" },
 
     // NOÇÕES DE INFORMÁTICA
-    { subject: "Noções de Informática", topic: "Noções de sistema operacional (ambientes Linux e Windows) e gerenciamento de arquivos/pastas.", hot: true, weight: "25% (Sistemas Oper.)" },
-    { subject: "Noções de Informática", topic: "Edição de textos, planilhas e apresentações (Microsoft Office e BrOffice).", hot: true, weight: "25% (Office/BrOffice)" },
-    { subject: "Noções de Informática", topic: "Redes de computadores: conceitos básicos, ferramentas, aplicativos e procedimentos de Internet e intranet.", hot: true, weight: "29% (Redes/Intranet)" },
-    { subject: "Noções de Informática", topic: "Computação na nuvem (cloud computing) e navegadores web.", hot: true, weight: "29% (Cloud)" },
-    { subject: "Noções de Informática", topic: "Segurança da informação: noções de vírus, worms e outras pragas, procedimentos de backup.", hot: true, weight: "27% (Segurança)" }
+    { subject: "Noções de Informática", topic: "Internet, intranet, redes de computadores e computação em nuvem.", hot: true, weight: "29% (Redes/Nuvem)" },
+    { subject: "Noções de Informática", topic: "Segurança da informação, malware (vírus/worms/pragas) e rotinas de backup.", hot: true, weight: "27% (Segurança)" },
+    { subject: "Noções de Informática", topic: "Sistemas operacionais Windows e Linux, Suíte Office e BrOffice.", hot: true, weight: "25% (OS/Office)" },
+
+    // RACIOCÍNIO LÓGICO
+    { subject: "Raciocínio Lógico", topic: "Proposições simples e compostas. Tabelas-verdade, equivalências e Leis de Morgan.", hot: false },
+    { subject: "Raciocínio Lógico", topic: "Lógica de argumentação, diagramas lógicos, contagem e probabilidade.", hot: false }
 ];
 
 // Metas do TAF Masculino PMMA
@@ -100,6 +71,19 @@ const TAF_METAS = {
 
 // Data oficial da prova
 const EXAM_DATE = new Date("2026-10-11T08:00:00");
+
+// Banco de Questões e Sessão do Simulator
+let bancoQuestoes = [];
+let activeSession = {
+    questions: [],
+    currentIndex: 0,
+    correctCount: 0,
+    incorrectCount: 0,
+    startTime: null,
+    timerInterval: null,
+    elapsedSeconds: 0,
+    subject: ""
+};
 
 // Estado Global do Aplicativo
 let state = {
@@ -130,6 +114,11 @@ document.addEventListener("DOMContentLoaded", () => {
     initForms();
     startCountdown();
     checkPasscode();
+    
+    // Inicialização do Simulator, Avulsos e Hot Topics
+    loadBancoQuestoes();
+    initQuestoesTab();
+    initDashboardExtras();
     
     // Carrega dados iniciais (do Sheets ou localStorage)
     refreshData();
@@ -442,6 +431,7 @@ function formatDateString(val) {
 function processDataAndRender() {
     renderMetrics();
     renderTodayPlan();
+    renderSpacedRevisions();
     renderCronograma();
     renderEdital();
     renderTAF();
@@ -1215,6 +1205,8 @@ function renderHistory() {
     
     list.forEach(item => {
         const row = document.createElement("tr");
+        const catEscaped = item.cat.replace(/'/g, "\\'");
+        const rawJsonStr = encodeURIComponent(JSON.stringify(item.raw));
         row.innerHTML = `
             <td><b>${item.date}</b></td>
             <td><span class="badge" style="background: var(--border-light); border-color: var(--border-light); color: var(--text-primary);">${item.cat}</span></td>
@@ -1222,8 +1214,14 @@ function renderHistory() {
             <td>${item.detail}</td>
             <td style="font-size: 11px; color: var(--text-secondary); max-width: 250px;">${item.notes}</td>
             <td>
-                <!-- Apenas indicador para offline, edição não implementada para simplificar de início -->
-                <span style="font-size: 11px; color: var(--text-muted);"><i class="fa-solid fa-lock" title="Edição direta deve ser feita na Planilha original"></i> Bloqueado</span>
+                <div style="display: flex; gap: 6px;">
+                    <button class="btn btn-outline btn-sm" onclick="handleEditHistory('${catEscaped}', '${rawJsonStr}')" title="Editar registro" style="padding: 4px 8px; font-size: 11px;">
+                        <i class="fa-solid fa-pencil"></i>
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="handleDeleteHistory('${catEscaped}', '${rawJsonStr}')" title="Excluir registro" style="padding: 4px 8px; font-size: 11px; border-color: rgba(239, 68, 68, 0.2); color: var(--danger);">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
             </td>
         `;
         tbody.appendChild(row);
@@ -1290,17 +1288,30 @@ function renderErrors() {
         const card = document.createElement("div");
         card.className = "erro-card";
         
+        const safeKey = (err.simId + '_' + err.subject + '_' + err.topic).replace(/[^a-zA-Z0-9]/g, '_');
         card.innerHTML = `
             <div>
                 <div class="erro-subject">${err.subject}</div>
                 <div class="erro-topic">${err.topic}</div>
-                <div class="erro-desc">"${err.notes}"</div>
+                <div class="erro-desc-container" style="position: relative; margin-top: 10px;">
+                    <div class="erro-desc" id="desc-view-${safeKey}">"${err.notes}"</div>
+                    <textarea id="desc-edit-${safeKey}" class="form-control" style="display: none; width: 100%; font-size: 13px; margin-top: 5px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-light); color: var(--text-primary); padding: 8px; border-radius: 8px;" rows="3">${err.notes}</textarea>
+                    <div id="desc-actions-${safeKey}" style="display: none; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+                        <button class="btn btn-outline btn-sm" onclick="cancelEditErrorNotes('${safeKey}')" style="font-size: 11px; padding: 4px 8px;">Cancelar</button>
+                        <button class="btn btn-primary btn-sm" onclick="saveEditErrorNotes('${safeKey}', '${err.simId}', '${err.subject.replace(/'/g, "\\'")}', '${err.topic.replace(/'/g, "\\'")}')" style="font-size: 11px; padding: 4px 8px;">Salvar</button>
+                    </div>
+                </div>
             </div>
             <div class="erro-footer">
                 <span class="erro-date"><i class="fa-solid fa-calendar"></i> ${err.date} (${err.simName})</span>
-                <button class="btn btn-outline btn-sm" onclick="handleMarkErrorResolved('${err.simId}', '${err.subject.replace(/'/g, "\\'")}', '${err.topic.replace(/'/g, "\\'")}')">
-                    <i class="fa-solid fa-check"></i> Revisado
-                </button>
+                <div style="display: flex; gap: 6px;">
+                    <button class="btn btn-outline btn-sm" onclick="startEditErrorNotes('${safeKey}')" title="Editar anotação" style="padding: 4px 8px; font-size: 11px;">
+                        <i class="fa-solid fa-pencil"></i>
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="handleMarkErrorResolved('${err.simId}', '${err.subject.replace(/'/g, "\\'")}', '${err.topic.replace(/'/g, "\\'")}')" style="padding: 4px 8px; font-size: 11px;">
+                        <i class="fa-solid fa-check"></i> Revisado
+                    </button>
+                </div>
             </div>
         `;
         
@@ -2560,3 +2571,993 @@ window.handleUnconcludeCronoDay = handleUnconcludeCronoDay;
 window.openStudyLogPrefilled = openStudyLogPrefilled;
 window.renderCronograma = renderCronograma;
 window.concludeCronoDayDirectly = concludeCronoDayDirectly;
+
+// ==========================================================================
+// 🧠 Sistema de Simulador de Questões, Revisões Espaçadas e Extras do Dashboard
+// ==========================================================================
+
+async function loadBancoQuestoes() {
+    try {
+        const response = await fetch("banco_questoes.json");
+        bancoQuestoes = await response.json();
+        console.log(`Carregadas ${bancoQuestoes.length} questões com sucesso.`);
+    } catch (err) {
+        console.error("Erro ao carregar banco_questoes.json:", err);
+    }
+}
+
+function initQuestoesTab() {
+    const btnStart = document.getElementById("btn-start-questions");
+    const btnCerto = document.getElementById("btn-answer-certo");
+    const btnErrado = document.getElementById("btn-answer-errado");
+    const btnNext = document.getElementById("btn-next-question");
+    const btnSave = document.getElementById("btn-save-session-history");
+    const btnRestart = document.getElementById("btn-restart-session");
+    
+    if (btnStart) btnStart.addEventListener("click", startPracticeSession);
+    if (btnCerto) btnCerto.addEventListener("click", () => submitAnswer('c'));
+    if (btnErrado) btnErrado.addEventListener("click", () => submitAnswer('e'));
+    if (btnNext) btnNext.addEventListener("click", nextQuestion);
+    if (btnSave) btnSave.addEventListener("click", saveSessionToHistory);
+    if (btnRestart) btnRestart.addEventListener("click", () => {
+        document.getElementById("end-session-card").style.display = "none";
+        document.getElementById("placeholder-question-card").style.display = "flex";
+    });
+    
+    const btnAddToErrors = document.getElementById("btn-add-to-errors");
+    if (btnAddToErrors) {
+        btnAddToErrors.addEventListener("click", async () => {
+            const q = activeSession.questions[activeSession.currentIndex];
+            const errRecord = {
+                simId: "PRATICA_" + new Date().getTime(),
+                simName: "Prática do Simulador",
+                subject: q.subject,
+                topic: q.topic,
+                questions: 1,
+                correct: 0,
+                errors: 1,
+                notes: `Erro no simulador: ${q.statement.replace(/<\/?[^>]+(>|$)/g, "").substring(0, 120)}...`,
+                needsReview: true
+            };
+            
+            state.simuladosDet.push(errRecord);
+            if (state.mode === "synced" && state.apiUrl) {
+                try {
+                    await fetch(state.apiUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'addSimulado',
+                            name: "Erro do Simulador",
+                            date: new Date().toLocaleDateString('pt-BR'),
+                            totalQuestions: 1,
+                            totalCorrect: 0,
+                            details: [errRecord]
+                        })
+                    });
+                } catch (e) {
+                    console.error("Erro ao sincronizar caderno de erros:", e);
+                }
+            } else {
+                saveLocalDataToStorage();
+            }
+            alert("Erro registrado no Caderno de Erros com sucesso!");
+            document.getElementById("btn-add-to-errors").disabled = true;
+        });
+    }
+}
+
+function startPracticeSession() {
+    const subFilter = document.getElementById("questoes-filter-subject").value;
+    const originFilter = document.getElementById("questoes-filter-origin").value;
+    const weeklyFilter = document.getElementById("questoes-filter-weekly").checked;
+    const errorsFilter = document.getElementById("questoes-filter-errors-only").checked;
+    const limit = parseInt(document.getElementById("questoes-filter-limit").value) || 20;
+    
+    // Helpers para normalização e extração de palavras-chave
+    const cleanText = (text) => {
+        if (!text) return "";
+        return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    };
+
+    const getKeywords = (text) => {
+        const cleaned = cleanText(text);
+        const words = cleaned.match(/[a-z0-9]{3,}/g) || [];
+        const stops = new Set(["para", "como", "mais", "seus", "suas", "pela", "pelo", "esse", "essa", "esta", "este", "sobre", "uma", "com", "dos", "das"]);
+        return words.filter(w => !stops.has(w));
+    };
+
+    let filtered = bancoQuestoes;
+    if (subFilter !== "all") {
+        const subFilterClean = cleanText(subFilter);
+        filtered = filtered.filter(q => {
+            const qSubj = cleanText(q.subject);
+            // Cross-mapping do dropdown
+            if ((subFilterClean.includes("legisla") || subFilterClean.includes("informa")) && qSubj === "legislacao institucional") {
+                return true;
+            }
+            return qSubj === subFilterClean;
+        });
+    }
+    
+    if (originFilter === "exam") {
+        filtered = filtered.filter(q => q.document && q.document.includes("2017"));
+    } else if (originFilter === "converted") {
+        filtered = filtered.filter(q => !q.document || !q.document.includes("2017"));
+    } else if (originFilter === "hot") {
+        const hotTopics = DEFAULT_SYLLABUS.filter(t => t.hot && (subFilter === "all" || t.subject === subFilter));
+        const hotTopicNames = hotTopics.map(t => t.topic.toLowerCase().trim());
+        filtered = filtered.filter(q => q.topic && hotTopicNames.some(ht => q.topic.toLowerCase().trim().includes(ht) || ht.includes(q.topic.toLowerCase().trim())));
+    }
+    
+    // Helper para verificar se uma data pertence à semana atual (segunda a domingo)
+    const isDateInCurrentWeek = (dateStr) => {
+        let d;
+        if (dateStr.includes("/")) {
+            const parts = dateStr.split("/");
+            d = new Date(parts[2], parts[1] - 1, parts[0]);
+        } else {
+            d = new Date(dateStr);
+        }
+        const now = new Date();
+        const currentDay = now.getDay();
+        const distanceToMonday = currentDay === 0 ? 6 : currentDay - 1;
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - distanceToMonday);
+        startOfWeek.setHours(0,0,0,0);
+        
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23,59,59,999);
+        
+        return d >= startOfWeek && d <= endOfWeek;
+    };
+    
+    // Coleta todos os tópicos planejados no cronograma para a semana corrente
+    const weeklyCronoTopics = [];
+    (state.crono || []).forEach(c => {
+        if (isDateInCurrentWeek(c.date)) {
+            if (c.m1 && c.m1 !== "DESCANSO" && c.m1 !== "Simulado Geral" && c.m1 !== "TAF (Físico)" && c.m1 !== "REVISÃO SEMANAL") {
+                weeklyCronoTopics.push({ subject: c.m1, topic: c.a1 });
+            }
+            if (c.m2 && c.m2 !== "DESCANSO" && c.m2 !== "Revisão Caderno de Erros" && c.m2 !== "Simulado Geral" && c.m2 !== "TAF (Físico)" && c.m2 !== "REVISÃO SEMANAL") {
+                weeklyCronoTopics.push({ subject: c.m2, topic: c.a2 });
+            }
+        }
+    });
+    
+    // Coleta todos os tópicos do Caderno de Erros
+    const errorTopics = (state.simuladosDet || [])
+        .filter(x => x.errors > 0 || x.needsReview)
+        .map(x => ({ subject: x.subject, topic: x.topic }));
+    
+    let finalQuestions = [];
+    
+    // Helper de filtragem por tópicos (via Overlap de Palavras-Chave e Cross-Mapping de Disciplinas)
+    const filterByTopicsList = (questionsPool, topicsList) => {
+        return questionsPool.filter(q => {
+            const qSubj = cleanText(q.subject);
+            const qTextClean = cleanText(q.statement + " " + (q.topic || ""));
+            const qWords = new Set(qTextClean.match(/[a-z0-9]{3,}/g) || []);
+            
+            return topicsList.some(wt => {
+                const wtSubj = cleanText(wt.subject);
+                let subjectMatches = qSubj === wtSubj;
+                if ((wtSubj.includes("legisla") || wtSubj.includes("informa")) && qSubj === "legislacao institucional") {
+                    subjectMatches = true;
+                }
+                
+                if (subjectMatches) {
+                    const wtKeywords = getKeywords(wt.topic);
+                    const overlap = wtKeywords.filter(w => qWords.has(w));
+                    return overlap.length >= 1;
+                }
+                return false;
+            });
+        });
+    };
+    
+    if (weeklyFilter && errorsFilter) {
+        // Caso A: Ambos marcados (Foco nos assuntos do Cronograma da Semana, mas com 30% injetados do Caderno de Erros)
+        if (weeklyCronoTopics.length === 0) {
+            alert("Nenhum assunto agendado no cronograma para esta semana foi encontrado!");
+            return;
+        }
+        
+        // Questões dos tópicos da semana
+        const weekQuestions = filterByTopicsList(filtered, weeklyCronoTopics);
+        
+        // Separa em erros vs normais
+        const weekErrorQuestions = filterByTopicsList(weekQuestions, errorTopics);
+        const weekNormalQuestions = weekQuestions.filter(q => !weekErrorQuestions.includes(q));
+        
+        const targetErrorCount = Math.round(limit * 0.3);
+        const sampledErrors = weekErrorQuestions.sort(() => 0.5 - Math.random()).slice(0, targetErrorCount);
+        
+        const neededNormal = limit - sampledErrors.length;
+        const sampledNormal = weekNormalQuestions.sort(() => 0.5 - Math.random()).slice(0, neededNormal);
+        
+        finalQuestions = sampledErrors.concat(sampledNormal).sort(() => 0.5 - Math.random());
+    } else if (weeklyFilter) {
+        // Caso B: Apenas cronograma da semana
+        if (weeklyCronoTopics.length === 0) {
+            alert("Nenhum assunto agendado no cronograma para esta semana foi encontrado!");
+            return;
+        }
+        finalQuestions = filterByTopicsList(filtered, weeklyCronoTopics);
+        finalQuestions = finalQuestions.sort(() => 0.5 - Math.random()).slice(0, limit);
+    } else if (errorsFilter) {
+        // Caso C: Apenas erros gerais
+        if (errorTopics.length === 0) {
+            alert("Nenhum erro registrado no seu Caderno de Erros para focar no momento!");
+            return;
+        }
+        finalQuestions = filterByTopicsList(filtered, errorTopics);
+        finalQuestions = finalQuestions.sort(() => 0.5 - Math.random()).slice(0, limit);
+    } else {
+        // Caso D: Filtros normais (Matéria e Origem apenas)
+        finalQuestions = filtered.sort(() => 0.5 - Math.random()).slice(0, limit);
+    }
+    
+    if (!finalQuestions || finalQuestions.length === 0) {
+        alert("Nenhuma questão encontrada com os filtros selecionados!");
+        return;
+    }
+    
+    activeSession.questions = finalQuestions;
+    activeSession.currentIndex = 0;
+    activeSession.correctCount = 0;
+    activeSession.incorrectCount = 0;
+    activeSession.startTime = new Date();
+    activeSession.elapsedSeconds = 0;
+    activeSession.subject = subFilter === "all" ? "Várias Matérias" : subFilter;
+    
+    document.getElementById("session-correct-count").innerText = "0";
+    document.getElementById("session-incorrect-count").innerText = "0";
+    document.getElementById("session-accuracy-pct").innerText = "0%";
+    
+    document.getElementById("session-stats-card").style.display = "block";
+    document.getElementById("active-question-card").style.display = "block";
+    document.getElementById("placeholder-question-card").style.display = "none";
+    document.getElementById("end-session-card").style.display = "none";
+    
+    if (activeSession.timerInterval) clearInterval(activeSession.timerInterval);
+    activeSession.timerInterval = setInterval(() => {
+        activeSession.elapsedSeconds++;
+        const mins = Math.floor(activeSession.elapsedSeconds / 60).toString().padStart(2, '0');
+        const secs = (activeSession.elapsedSeconds % 60).toString().padStart(2, '0');
+        document.getElementById("session-timer").innerText = `${mins}:${secs}`;
+    }, 1000);
+    
+    renderActiveQuestion();
+}
+
+function renderActiveQuestion() {
+    const idx = activeSession.currentIndex;
+    const q = activeSession.questions[idx];
+    
+    document.getElementById("q-meta-subject").innerText = q.subject;
+    document.getElementById("q-meta-topic").innerText = q.topic;
+    document.getElementById("q-meta-origin").innerText = q.document || "Simulador QG";
+    
+    // Verifica se é tópico quente
+    const isHot = DEFAULT_SYLLABUS.some(t => t.hot && t.subject === q.subject && t.topic.toLowerCase().includes(q.topic.toLowerCase()));
+    document.getElementById("q-meta-hot").style.display = isHot ? "inline-block" : "none";
+    
+    // Statement
+    document.getElementById("q-statement-text").innerHTML = `<b>Questão ${idx + 1}/${activeSession.questions.length}</b><br><br>${q.statement}`;
+    
+    // Reset buttons
+    const btnCerto = document.getElementById("btn-answer-certo");
+    const btnErrado = document.getElementById("btn-answer-errado");
+    btnCerto.disabled = false;
+    btnErrado.disabled = false;
+    btnCerto.classList.remove("selected");
+    btnErrado.classList.remove("selected");
+    
+    document.getElementById("btn-add-to-errors").disabled = false;
+    document.getElementById("q-feedback-panel").style.display = "none";
+}
+
+function submitAnswer(userAnswer) {
+    const idx = activeSession.currentIndex;
+    const q = activeSession.questions[idx];
+    
+    document.getElementById("btn-answer-certo").disabled = true;
+    document.getElementById("btn-answer-errado").disabled = true;
+    
+    const isCorrect = userAnswer === q.answer;
+    const feedbackHeader = document.getElementById("q-feedback-header");
+    const feedbackComment = document.getElementById("q-feedback-comment");
+    
+    if (isCorrect) {
+        activeSession.correctCount++;
+        feedbackHeader.className = "feedback-header hit";
+        feedbackHeader.innerHTML = `<i class="fa-solid fa-circle-check"></i> Resposta Correta!`;
+        document.getElementById("session-correct-count").innerText = activeSession.correctCount;
+    } else {
+        activeSession.incorrectCount++;
+        feedbackHeader.className = "feedback-header miss";
+        feedbackHeader.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Resposta Incorreta! (Gabarito Oficial: ${q.answer.toUpperCase() === 'C' ? 'CERTO' : 'ERRADO'})`;
+        document.getElementById("session-incorrect-count").innerText = activeSession.incorrectCount;
+    }
+    
+    if (userAnswer === 'c') {
+        document.getElementById("btn-answer-certo").classList.add("selected");
+    } else {
+        document.getElementById("btn-answer-errado").classList.add("selected");
+    }
+    
+    const totalAnswered = activeSession.correctCount + activeSession.incorrectCount;
+    const accuracy = totalAnswered > 0 ? Math.round((activeSession.correctCount / totalAnswered) * 100) : 0;
+    document.getElementById("session-accuracy-pct").innerText = `${accuracy}%`;
+    
+    feedbackComment.innerHTML = q.comment || "Sem comentários específicos da banca.";
+    
+    document.getElementById("btn-add-to-errors").style.display = isCorrect ? "none" : "inline-block";
+    document.getElementById("q-feedback-panel").style.display = "block";
+}
+
+function nextQuestion() {
+    activeSession.currentIndex++;
+    if (activeSession.currentIndex < activeSession.questions.length) {
+        renderActiveQuestion();
+    } else {
+        finishPracticeSession();
+    }
+}
+
+function finishPracticeSession() {
+    if (activeSession.timerInterval) clearInterval(activeSession.timerInterval);
+    
+    document.getElementById("active-question-card").style.display = "none";
+    document.getElementById("session-stats-card").style.display = "none";
+    
+    const total = activeSession.correctCount + activeSession.incorrectCount;
+    const accuracy = total > 0 ? Math.round((activeSession.correctCount / total) * 100) : 0;
+    
+    const mins = Math.floor(activeSession.elapsedSeconds / 60);
+    const summary = `Você resolveu <b>${total} questões</b> em <b>${mins} min</b>, obtendo <b>${activeSession.correctCount} acertos</b> e <b>${activeSession.incorrectCount} erros</b>. Aproveitamento de <b>${accuracy}%</b>.`;
+    document.getElementById("end-session-summary").innerHTML = summary;
+    
+    document.getElementById("end-session-card").style.display = "flex";
+}
+
+async function saveSessionToHistory() {
+    const total = activeSession.correctCount + activeSession.incorrectCount;
+    const durationMins = Math.max(1, Math.round(activeSession.elapsedSeconds / 60));
+    
+    const newStudy = {
+        date: new Date().toLocaleDateString('pt-BR'),
+        subject: activeSession.subject,
+        topic: "Treinamento Prático de Questões",
+        type: "Questões",
+        duration: durationMins,
+        questions: total,
+        correct: activeSession.correctCount,
+        errors: activeSession.incorrectCount,
+        notes: `Sessão de prática realizada no simulador QG PMMA. Aproveitamento de ${Math.round((activeSession.correctCount / (total || 1)) * 100)}%.`
+    };
+    newStudy.accuracy = newStudy.questions > 0 ? (newStudy.correct / newStudy.questions) : 0.0;
+    
+    if (state.mode === "synced" && state.apiUrl) {
+        try {
+            await fetch(state.apiUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'addStudy', ...newStudy })
+            });
+        } catch (e) {
+            console.error("Erro ao sincronizar sessão de questões:", e);
+        }
+    } else {
+        state.registroEstudos.push(newStudy);
+        saveLocalDataToStorage();
+    }
+    
+    alert("Sessão salva no histórico de estudos com sucesso!");
+    document.getElementById("end-session-card").style.display = "none";
+    document.getElementById("placeholder-question-card").style.display = "flex";
+    
+    refreshData();
+}
+
+function initDashboardExtras() {
+    // Botão de Estudo Avulso
+    const btnAvulso = document.getElementById("btn-open-study-avulso");
+    if (btnAvulso) {
+        btnAvulso.addEventListener("click", () => {
+            pendingCronoConcludeDate = null;
+            openModal('modal-study');
+            
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            const day = today.getDate().toString().padStart(2, '0');
+            document.getElementById("study-date").value = `${year}-${month}-${day}`;
+            
+            const studySubSelect = document.getElementById("study-subject");
+            studySubSelect.value = "";
+            const studyTopicSelect = document.getElementById("study-topic");
+            studyTopicSelect.innerHTML = `<option value="">Selecione a matéria primeiro</option>`;
+            
+            document.getElementById("study-duration").value = "";
+            document.getElementById("study-questions").value = "";
+            document.getElementById("study-correct").value = "";
+            document.getElementById("study-notes").value = "";
+            document.getElementById("study-accuracy-preview").value = "0%";
+        });
+    }
+    
+    // Card de Tópicos Quentes clique
+    const hotCard = document.getElementById("hot-topics-card");
+    if (hotCard) {
+        hotCard.addEventListener("click", openHotTopicsDetailModal);
+    }
+    
+    // Botão de Gerar Cronograma 60 Dias
+    const btnGen60 = document.getElementById("btn-generate-60day-plan");
+    if (btnGen60) {
+        btnGen60.addEventListener("click", generate60DayPlan);
+    }
+}
+
+function openHotTopicsDetailModal() {
+    openModal('modal-hot-topics-detail');
+    const tbody = document.getElementById("hot-topics-detail-rows");
+    tbody.innerHTML = "";
+    
+    const hotTopics = DEFAULT_SYLLABUS.filter(t => t.hot);
+    
+    hotTopics.forEach(t => {
+        const edTopic = state.edital.find(e => e.subject.toLowerCase() === t.subject.toLowerCase() && e.topic.toLowerCase() === t.topic.toLowerCase());
+        const studied = edTopic ? edTopic.studied : false;
+        
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td><b>${t.subject}</b></td>
+            <td>${t.topic} <span style="font-size:10px; color: var(--danger); font-weight:600;"><i class="fa-solid fa-fire"></i> ${t.weight || ''}</span></td>
+            <td>
+                ${studied ? '<span class="badge" style="background: var(--success-bg); border-color: rgba(16,185,129,0.2); color: var(--success);"><i class="fa-solid fa-circle-check"></i> Concluído</span>' 
+                          : '<span class="badge" style="background: rgba(255,255,255,0.04); border-color: var(--border-light); color: var(--text-muted);"><i class="fa-solid fa-circle-minus"></i> Pendente</span>'}
+            </td>
+            <td>
+                <button class="btn btn-outline btn-sm" onclick="handleHotTopicStudyQuick('${t.subject.replace(/'/g, "\\'")}', '${t.topic.replace(/'/g, "\\'")}')" style="padding: 4px 8px; font-size:11px;">
+                    <i class="fa-solid fa-play"></i> Estudo Rápido
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function handleHotTopicStudyQuick(subject, topic) {
+    closeModal('modal-hot-topics-detail');
+    const today = new Date();
+    const dateFormatted = today.toLocaleDateString('pt-BR');
+    openStudyLogPrefilled(dateFormatted, subject, topic, false);
+}
+
+function renderSpacedRevisions() {
+    const tbody = document.getElementById("revisions-list-container");
+    const countBadge = document.getElementById("revisions-count-badge");
+    if (!tbody) return;
+    
+    tbody.innerHTML = "";
+    let list = [];
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const lastStudiesMap = {};
+    state.registroEstudos.forEach(s => {
+        if (s.type === "Teoria" || s.type === "Questões" || s.type === "Revisão") {
+            const key = s.subject + '|||' + s.topic;
+            const studyDate = parseDate(s.date);
+            if (!lastStudiesMap[key] || studyDate > lastStudiesMap[key]) {
+                lastStudiesMap[key] = studyDate;
+            }
+        }
+    });
+    
+    const intervals = [1, 7, 15, 21, 30];
+    
+    for (const key in lastStudiesMap) {
+        const lastDate = lastStudiesMap[key];
+        const diffTime = today - lastDate;
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (intervals.includes(diffDays)) {
+            const parts = key.split('|||');
+            list.push({
+                subject: parts[0],
+                topic: parts[1],
+                interval: diffDays,
+                date: lastDate.toLocaleDateString('pt-BR')
+            });
+        }
+    }
+    
+    countBadge.innerText = list.length;
+    
+    if (list.length === 0) {
+        tbody.innerHTML = `<p class="empty-state" style="font-size: 12px; padding: 10px;">Nenhuma revisão pendente para hoje.</p>`;
+        return;
+    }
+    
+    list.forEach(item => {
+        const row = document.createElement("div");
+        row.style.display = "flex";
+        row.style.justify = "space-between";
+        row.style.alignItems = "center";
+        row.style.padding = "10px";
+        row.style.background = "rgba(255, 255, 255, 0.02)";
+        row.style.border = "1px solid var(--border-light)";
+        row.style.borderRadius = "8px";
+        row.style.fontSize = "12.5px";
+        row.style.marginTop = "6px";
+        
+        row.innerHTML = `
+            <div style="flex: 1; padding-right: 8px;">
+                <span class="badge" style="background: var(--warning-bg); border-color: rgba(245,158,11,0.2); color: var(--warning); font-size: 10px; margin-right: 6px; padding: 2px 4px;">${item.interval}d</span>
+                <b>${item.subject}</b>: <span style="color: var(--text-secondary);">${item.topic}</span>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="openStudyLogPrefilled('${today.toLocaleDateString('pt-BR')}', '${item.subject.replace(/'/g, "\\'")}', '${item.topic.replace(/'/g, "\\'")}')" style="padding: 4px 8px; font-size: 11px;">
+                Revisar
+            </button>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// CRUD do Histórico - Exclusão
+async function handleDeleteHistory(category, rawJsonEncoded) {
+    if (!confirm("Tem certeza que deseja excluir permanentemente este registro?")) return;
+    
+    const raw = JSON.parse(decodeURIComponent(rawJsonEncoded));
+    
+    if (state.mode === "synced" && state.apiUrl) {
+        try {
+            const payload = { action: 'deleteHistoryItem', cat: category };
+            if (category === 'Estudo Diário') {
+                payload.date = raw.date;
+                payload.subject = raw.subject;
+                payload.topic = raw.topic;
+                payload.type = raw.type;
+            } else if (category === 'Simulado Teórico') {
+                payload.id = raw.id;
+            } else if (category === 'Treino TAF') {
+                payload.date = raw.date;
+                payload.exercise = raw.exercise;
+            } else if (category === 'Simulado TAF Completo') {
+                payload.date = raw.date;
+            }
+            
+            await fetch(state.apiUrl, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            if (category === 'Estudo Diário') {
+                const others = state.registroEstudos.filter(s => s.subject === raw.subject && s.topic === raw.topic && !(s.date === raw.date && s.type === raw.type));
+                if (others.length === 0) {
+                    await fetch(state.apiUrl, {
+                        method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'toggleEdital', subject: raw.subject, topic: raw.topic, studied: false, questions: 0, correct: 0 })
+                    });
+                }
+            }
+        } catch (e) {
+            console.error("Erro ao sincronizar exclusão:", e);
+        }
+    } else {
+        if (category === 'Estudo Diário') {
+            state.registroEstudos = state.registroEstudos.filter(s => !(s.date === raw.date && s.subject === raw.subject && s.topic === raw.topic && s.type === raw.type));
+            
+            const others = state.registroEstudos.filter(s => s.subject === raw.subject && s.topic === raw.topic);
+            if (others.length === 0) {
+                const edTopic = state.edital.find(x => x.subject === raw.subject && x.topic === raw.topic);
+                if (edTopic) {
+                    edTopic.studied = false;
+                    edTopic.questions = 0;
+                    edTopic.correct = 0;
+                }
+            }
+        } else if (category === 'Simulado Teórico') {
+            state.simuladosCab = state.simuladosCab.filter(c => c.id !== raw.id);
+            state.simuladosDet = state.simuladosDet.filter(d => d.simId !== raw.id);
+        } else if (category === 'Treino TAF') {
+            state.treinoTaf = state.treinoTaf.filter(t => !(t.date === raw.date && t.exercise === raw.exercise));
+        } else if (category === 'Simulado TAF Completo') {
+            state.simuladosTaf = state.simuladosTaf.filter(s => s.date !== raw.date);
+        }
+        saveLocalDataToStorage();
+    }
+    
+    alert("Registro excluído com sucesso!");
+    refreshData();
+}
+
+// CRUD do Histórico - Edição
+async function handleEditHistory(category, rawJsonEncoded) {
+    const raw = JSON.parse(decodeURIComponent(rawJsonEncoded));
+    
+    if (category === 'Estudo Diário') {
+        const duration = prompt("Editar Tempo de Estudo (Minutos):", raw.duration);
+        if (duration === null) return;
+        const questions = prompt("Editar Questões Resolvidas:", raw.questions);
+        if (questions === null) return;
+        const correct = prompt("Editar Quantidade de Acertos:", raw.correct);
+        if (correct === null) return;
+        const notes = prompt("Editar Anotações:", raw.notes || "");
+        if (notes === null) return;
+        
+        const newDuration = parseInt(duration) || 0;
+        const newQuestions = parseInt(questions) || 0;
+        const newCorrect = parseInt(correct) || 0;
+        
+        if (state.mode === "synced" && state.apiUrl) {
+            try {
+                await fetch(state.apiUrl, {
+                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'editHistoryItem',
+                        cat: 'Estudo Diário',
+                        oldDate: raw.date,
+                        oldSubject: raw.subject,
+                        oldTopic: raw.topic,
+                        oldType: raw.type,
+                        duration: newDuration,
+                        questions: newQuestions,
+                        correct: newCorrect,
+                        notes: notes
+                    })
+                });
+            } catch (e) {
+                console.error("Erro ao sincronizar edição:", e);
+            }
+        } else {
+            const find = state.registroEstudos.find(s => s.date === raw.date && s.subject === raw.subject && s.topic === raw.topic && s.type === raw.type);
+            if (find) {
+                find.duration = newDuration;
+                find.questions = newQuestions;
+                find.correct = newCorrect;
+                find.errors = Math.max(0, newQuestions - newCorrect);
+                find.accuracy = newQuestions > 0 ? (newCorrect / newQuestions) : 0.0;
+                find.notes = notes;
+            }
+            saveLocalDataToStorage();
+        }
+    } else if (category === 'Treino TAF') {
+        const result = prompt("Editar Resultado (Reps/Metros):", raw.result);
+        if (result === null) return;
+        const sets = prompt("Editar Séries:", raw.sets || 1);
+        if (sets === null) return;
+        const rest = prompt("Editar Tempo de Descanso (segundos):", raw.restTime || 0);
+        if (rest === null) return;
+        const duration = prompt("Editar Tempo Total (minutos):", raw.duration || 0);
+        if (duration === null) return;
+        
+        const newResult = parseInt(result) || 0;
+        
+        if (state.mode === "synced" && state.apiUrl) {
+            try {
+                await fetch(state.apiUrl, {
+                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'editHistoryItem',
+                        cat: 'Treino TAF',
+                        oldDate: raw.date,
+                        oldExercise: raw.exercise,
+                        result: newResult,
+                        sets: parseInt(sets) || 1,
+                        restTime: parseInt(rest) || 0,
+                        duration: parseInt(duration) || 0
+                    })
+                });
+            } catch (e) {
+                console.error("Erro ao sincronizar edição TAF:", e);
+            }
+        } else {
+            const find = state.treinoTaf.find(t => t.date === raw.date && t.exercise === raw.exercise);
+            if (find) {
+                find.result = newResult;
+                find.sets = parseInt(sets) || 1;
+                find.restTime = parseInt(rest) || 0;
+                find.duration = parseInt(duration) || 0;
+                find.status = find.result >= find.target ? 'META ALCANÇADA' : 'ABAIXO DA META';
+            }
+            saveLocalDataToStorage();
+        }
+    } else if (category === 'Simulado TAF Completo') {
+        const barra = prompt("Editar Barra:", raw.barra);
+        if (barra === null) return;
+        const sugado = prompt("Editar Meio Sugado:", raw.sugado);
+        if (sugado === null) return;
+        const abdominal = prompt("Editar Abdominal:", raw.abdominal);
+        if (abdominal === null) return;
+        const corrida = prompt("Editar Corrida (metros):", raw.corrida);
+        if (corrida === null) return;
+        const duration = prompt("Editar Tempo Total:", raw.duration);
+        if (duration === null) return;
+        const notes = prompt("Editar Observações:", raw.notes || "");
+        if (notes === null) return;
+        
+        const bVal = parseInt(barra) || 0;
+        const sVal = parseInt(sugado) || 0;
+        const aVal = parseInt(abdominal) || 0;
+        const cVal = parseInt(corrida) || 0;
+        const passed = bVal >= 4 && sVal >= 25 && aVal >= 35 && cVal >= 2400;
+        
+        if (state.mode === "synced" && state.apiUrl) {
+            try {
+                await fetch(state.apiUrl, {
+                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'editHistoryItem',
+                        cat: 'Simulado TAF Completo',
+                        oldDate: raw.date,
+                        barra: bVal,
+                        sugado: sVal,
+                        abdominal: aVal,
+                        corrida: cVal,
+                        duration: duration,
+                        passed: passed,
+                        notes: notes
+                    })
+                });
+            } catch (e) {
+                console.error("Erro ao sincronizar edição simulado TAF:", e);
+            }
+        } else {
+            const find = state.simuladosTaf.find(s => s.date === raw.date);
+            if (find) {
+                find.barra = bVal;
+                find.sugado = sVal;
+                find.abdominal = aVal;
+                find.corrida = cVal;
+                find.duration = duration;
+                find.status = passed ? 'APROVADO NO TAF' : 'NÃO ALCANÇADO';
+                find.notes = notes;
+            }
+            saveLocalDataToStorage();
+        }
+    }
+    
+    alert("Registro atualizado com sucesso!");
+    refreshData();
+}
+
+// Edição Inline no Caderno de Erros
+function startEditErrorNotes(safeKey) {
+    document.getElementById(`desc-view-${safeKey}`).style.display = "none";
+    document.getElementById(`desc-edit-${safeKey}`).style.display = "block";
+    document.getElementById(`desc-actions-${safeKey}`).style.display = "flex";
+}
+
+function cancelEditErrorNotes(safeKey) {
+    document.getElementById(`desc-view-${safeKey}`).style.display = "block";
+    document.getElementById(`desc-edit-${safeKey}`).style.display = "none";
+    document.getElementById(`desc-actions-${safeKey}`).style.display = "none";
+}
+
+async function saveEditErrorNotes(safeKey, simId, subject, topic) {
+    const textVal = document.getElementById(`desc-edit-${safeKey}`).value.trim();
+    if (!textVal) {
+        alert("A anotação de erro não pode ficar em branco!");
+        return;
+    }
+    
+    if (state.mode === "synced" && state.apiUrl) {
+        try {
+            await fetch(state.apiUrl, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'toggleErrorReview',
+                    simId: simId,
+                    subject: subject,
+                    topic: topic,
+                    needsReview: true,
+                    notes: textVal
+                })
+            });
+        } catch (e) {
+            console.error("Erro ao sincronizar edição do erro:", e);
+        }
+    }
+    
+    const find = state.simuladosDet.find(d => d.simId === simId && d.subject === subject && d.topic === topic);
+    if (find) {
+        find.notes = textVal;
+    }
+    saveLocalDataToStorage();
+    
+    alert("Anotação de erro salva!");
+    refreshData();
+}
+
+// Expõe globalmente para ações inline do HTML
+window.handleDeleteHistory = handleDeleteHistory;
+window.handleEditHistory = handleEditHistory;
+window.startEditErrorNotes = startEditErrorNotes;
+window.cancelEditErrorNotes = cancelEditErrorNotes;
+window.saveEditErrorNotes = saveEditErrorNotes;
+window.handleHotTopicStudyQuick = handleHotTopicStudyQuick;
+window.loadBancoQuestoes = loadBancoQuestoes;
+window.initQuestoesTab = initQuestoesTab;
+window.initDashboardExtras = initDashboardExtras;
+window.renderSpacedRevisions = renderSpacedRevisions;
+
+async function generate60DayPlan() {
+    if (!confirm("Isso irá substituir o seu cronograma atual por um novo planejamento LINEAR de 60 dias focado nos Temas Quentes. Deseja continuar?")) {
+        return;
+    }
+    
+    // Agrupa tópicos por disciplina mantendo a ordem original do edital
+    const subjectsMap = {};
+    DEFAULT_SYLLABUS.forEach(t => {
+        if (!subjectsMap[t.subject]) {
+            subjectsMap[t.subject] = [];
+        }
+        subjectsMap[t.subject].push(t);
+    });
+    
+    // Pointers de progresso para cada matéria
+    const pointers = {};
+    for (const sub in subjectsMap) {
+        pointers[sub] = 0;
+    }
+    
+    // Mapeamento fixo de matérias por dia de semana de acordo com o quadro do quadro branco:
+    // Seg (1): PORT + LEG INST
+    // Ter (2): RLM + HIST (História do Brasil)
+    // Qua (3): PORT + INFO
+    // Qui (4): RLM + LEG INST (Usando Legislação PMMA)
+    // Sex (5): INFO + GEO (Geografia do Brasil)
+    const weekdaySchedule = {
+        1: { s1: "Língua Portuguesa", s2: "Legislação Institucional" },
+        2: { s1: "Raciocínio Lógico", s2: "História do Brasil" },
+        3: { s1: "Língua Portuguesa", s2: "Noções de Informática" },
+        4: { s1: "Raciocínio Lógico", s2: "Legislação pertinente à PMMA" },
+        5: { s1: "Noções de Informática", s2: "Geografia do Brasil" }
+    };
+    
+    let crono = [];
+    const startDate = new Date();
+    
+    for (let i = 0; i < 60; i++) {
+        const currentDate = new Date(startDate);
+        currentDate.setDate(startDate.getDate() + i);
+        
+        const dayOfWeek = currentDate.getDay(); // 0 = Domingo, 6 = Sábado
+        const dateStr = currentDate.toLocaleDateString('pt-BR');
+        
+        let m1 = "";
+        let a1 = "";
+        let m2 = "";
+        let a2 = "";
+        let foco = "Foco em Questões";
+        let ciclo = "Progressão Linear";
+        
+        const getCycleType = (sub, idx) => {
+            const list = subjectsMap[sub] || [];
+            if (list.length === 0) return "Teoria";
+            const cycleCount = Math.floor(idx / list.length);
+            if (cycleCount === 0) return "Teoria";
+            if (cycleCount === 1) return "Questões";
+            return "Revisão";
+        };
+        
+        if (dayOfWeek === 6) { // Sábado: História do Maranhão (Linear) + Revisão C.E.
+            const sub = "História do Maranhão";
+            const list = subjectsMap[sub] || [];
+            let pIdx = pointers[sub] % list.length;
+            let p = list[pIdx];
+            pointers[sub]++;
+            
+            const tType = getCycleType(sub, pIdx);
+            m1 = sub;
+            a1 = p ? `${p.topic} [${tType}]` : "Estudo complementar";
+            m2 = "Revisão Caderno de Erros";
+            a2 = "Revisar anotações de erros da semana e refazer itens errados no simulador";
+            foco = "100% Correção de Erros";
+            ciclo = "Análise de Falhas";
+        } else if (dayOfWeek === 0) { // Domingo: Geografia do Maranhão (Linear) + Simulado
+            const sub = "Geografia do Maranhão";
+            const list = subjectsMap[sub] || [];
+            let pIdx = pointers[sub] % list.length;
+            let p = list[pIdx];
+            pointers[sub]++;
+            
+            const tType = getCycleType(sub, pIdx);
+            m1 = sub;
+            a1 = p ? `${p.topic} [${tType}]` : "Estudo complementar";
+            m2 = "Simulado Geral";
+            a2 = "Resolver Simulado Geral Cebraspe (Foco em Tópicos Quentes)";
+            foco = "Simulação Real de Prova";
+            ciclo = "Testes de Velocidade";
+        } else {
+            // Dias de semana (Segunda a Sexta): 3 tópicos, no máximo 2 matérias
+            const sched = weekdaySchedule[dayOfWeek];
+            const sub1 = sched.s1;
+            const sub2 = sched.s2;
+            
+            // M1: puxa 2 assuntos lineares de sub1
+            const list1 = subjectsMap[sub1] || [];
+            let p1Idx = pointers[sub1] % (list1.length || 1);
+            let p1 = list1[p1Idx];
+            pointers[sub1]++;
+            
+            let p2Idx = pointers[sub1] % (list1.length || 1);
+            let p2 = list1[p2Idx];
+            pointers[sub1]++;
+            
+            // M2: puxa 1 assunto linear de sub2
+            const list2 = subjectsMap[sub2] || [];
+            let p3Idx = pointers[sub2] % (list2.length || 1);
+            let p3 = list2[p3Idx];
+            pointers[sub2]++;
+            
+            const t1Type = getCycleType(sub1, p1Idx);
+            const t2Type = getCycleType(sub1, p2Idx);
+            const t3Type = getCycleType(sub2, p3Idx);
+            
+            m1 = sub1;
+            a1 = p2 ? `${p1.topic} [${t1Type}] e ${p2.topic} [${t2Type}]` : `${p1.topic} [${t1Type}]`;
+            
+            m2 = sub2;
+            a2 = p3 ? `${p3.topic} [${t3Type}]` : "Revisão e Prática";
+            
+            foco = "70% Questões / 30% Teoria";
+            ciclo = "Progressão Linear do Edital";
+        }
+        
+        crono.push({
+            date: dateStr,
+            dia: `Dia ${i + 1}`,
+            semana: `Semana ${Math.ceil((i + 1) / 7)}`,
+            m1: m1,
+            a1: a1,
+            m2: m2,
+            a2: a2,
+            ciclo: ciclo,
+            foco: foco,
+            completed: false
+        });
+    }
+    
+    state.crono = crono;
+    const prevEdital = state.edital || [];
+    state.edital = DEFAULT_SYLLABUS.map(t => {
+        const existing = prevEdital.find(x => x.subject === t.subject && x.topic === t.topic);
+        if (existing) {
+            return {
+                subject: t.subject,
+                topic: t.topic,
+                studied: existing.studied,
+                questions: existing.questions,
+                correct: existing.correct,
+                revisionStatus: existing.revisionStatus || "Pendente"
+            };
+        } else {
+            return {
+                subject: t.subject,
+                topic: t.topic,
+                studied: false,
+                questions: 0,
+                correct: 0,
+                revisionStatus: "Pendente"
+            };
+        }
+    });
+    
+    saveLocalDataToStorage();
+    
+    alert("Cronograma LINEAR de 60 dias gerado com base no quadro de estudos! As matérias seguem a ordem lógica exata.");
+    processDataAndRender();
+}
+
+window.generate60DayPlan = generate60DayPlan;
+

@@ -42,6 +42,10 @@
                     <i class="fa-solid fa-book-bookmark"></i>
                     <span>Controle Edital</span>
                 </a>
+                <a href="#" class="menu-item" data-tab="questoes">
+                    <i class="fa-solid fa-circle-question"></i>
+                    <span>Resolver Questões</span>
+                </a>
                 <a href="#" class="menu-item" data-tab="taf">
                     <i class="fa-solid fa-person-running"></i>
                     <span>Treino TAF</span>
@@ -148,11 +152,14 @@
                                         <!-- Preenchido Dinamicamente via JS -->
                                         <p class="empty-state">Nenhum estudo agendado para hoje ou cronograma não configurado.</p>
                                     </div>
-                                    <div class="today-actions">
-                                        <button class="btn btn-primary" id="btn-conclude-day">
+                                    <div class="today-actions" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px;">
+                                        <button class="btn btn-primary" id="btn-conclude-day" style="flex: 1; min-width: 140px;">
                                             <i class="fa-solid fa-check-double"></i> Concluir Dia do Ciclo
                                         </button>
-                                        <button class="btn btn-secondary" id="btn-open-simulado">
+                                        <button class="btn btn-secondary" id="btn-open-study-avulso" style="flex: 1; min-width: 140px;">
+                                            <i class="fa-solid fa-plus"></i> Registrar Estudo
+                                        </button>
+                                        <button class="btn btn-outline" id="btn-open-simulado" style="flex: 1; min-width: 140px;">
                                             <i class="fa-solid fa-file-signature"></i> Registrar Simulado
                                         </button>
                                     </div>
@@ -160,7 +167,7 @@
                             </div>
 
                             <!-- Card de Tópicos Quentes Destaque -->
-                            <div class="panel-card hot-topics-summary-card">
+                            <div class="panel-card hot-topics-summary-card" id="hot-topics-card" style="cursor: pointer;">
                                 <div class="card-header">
                                     <h3><i class="fa-solid fa-fire"></i> Tópicos Quentes (Alta Incidência)</h3>
                                 </div>
@@ -175,6 +182,21 @@
                                         </div>
                                     </div>
                                     <p class="hot-card-note">Estes 24 tópicos representam mais de 75% das questões históricas da banca Cebraspe para a PMMA.</p>
+                                </div>
+                            </div>
+
+                            <!-- Card de Revisões Espaçadas Agendadas -->
+                            <div class="panel-card spaced-revisions-card" style="margin-top: 20px;">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-clock-rotate-left"></i> Revisões Agendadas para Hoje</h3>
+                                    <span class="badge badge-warning" id="revisions-count-badge">0</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="revision-list" id="revisions-list-container" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto;">
+                                        <!-- Preenchido via Javascript -->
+                                        <p class="empty-state" style="font-size: 12px;">Nenhuma revisão pendente para hoje.</p>
+                                    </div>
+                                    <p class="hot-card-note" style="margin-top: 12px; font-size: 11px;">Mecanismo de repetição espaçada baseado em ciclos de 1d, 7d, 15d, 21d e 30d.</p>
                                 </div>
                             </div>
                         </div>
@@ -450,6 +472,157 @@
                     </div>
                 </section>
 
+                <!-- ABA: RESOLVER QUESTÕES -->
+                <section id="tab-questoes" class="tab-pane">
+                    <div class="questoes-layout">
+                        <!-- Sidebar de Filtros e Estatísticas -->
+                        <div class="questoes-sidebar">
+                            <div class="panel-card">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-filter"></i> Filtros de Prática</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group" style="margin-bottom: 16px;">
+                                        <label for="questoes-filter-subject">Matéria</label>
+                                        <select id="questoes-filter-subject" class="form-select" style="width: 100%;">
+                                            <option value="all">Todas as Matérias</option>
+                                            <option value="Língua Portuguesa">Língua Portuguesa</option>
+                                            <option value="Raciocínio Lógico">Raciocínio Lógico</option>
+                                            <option value="História do Brasil">História do Brasil</option>
+                                            <option value="História do Maranhão">História do Maranhão</option>
+                                            <option value="Geografia do Brasil">Geografia do Brasil</option>
+                                            <option value="Geografia do Maranhão">Geografia do Maranhão</option>
+                                            <option value="Legislação Institucional">Legislação Institucional</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 16px;">
+                                        <label for="questoes-filter-origin">Filtro de Origem</label>
+                                        <select id="questoes-filter-origin" class="form-select" style="width: 100%;">
+                                            <option value="all">Todas as Questões</option>
+                                            <option value="exam">Provas Anteriores (CEBRASPE 2017)</option>
+                                            <option value="converted">Simulados / Banco de Exercícios</option>
+                                            <option value="hot">Apenas Tópicos Quentes</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 16px;">
+                                        <label for="questoes-filter-limit">Qtd. de Questões</label>
+                                        <input type="number" id="questoes-filter-limit" class="form-control" style="width: 100%; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; padding: 8px;" value="20" min="5" max="50">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer; color: var(--text-color);">
+                                            <input type="checkbox" id="questoes-filter-weekly" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                                            <span>Estudados nesta Semana</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer; color: var(--text-color);">
+                                            <input type="checkbox" id="questoes-filter-errors-only" style="width: 16px; height: 16px; accent-color: var(--danger);">
+                                            <span style="color: var(--danger); font-weight: 600;">Focar nos meus Erros (C.E.)</span>
+                                        </label>
+                                    </div>
+                                    <button class="btn btn-primary" id="btn-start-questions" style="width: 100%;">
+                                        <i class="fa-solid fa-play"></i> Iniciar Sessão
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="panel-card" id="session-stats-card" style="display: none;">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-chart-simple"></i> Rendimento na Sessão</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="questoes-stats-box">
+                                        <div class="questoes-stats-item">
+                                            <div class="questoes-stats-val success" id="session-correct-count">0</div>
+                                            <div style="font-size: 11px; color: var(--text-secondary);">Acertos</div>
+                                        </div>
+                                        <div class="questoes-stats-item">
+                                            <div class="questoes-stats-val danger" id="session-incorrect-count">0</div>
+                                            <div style="font-size: 11px; color: var(--text-secondary);">Erros</div>
+                                        </div>
+                                        <div class="questoes-stats-item">
+                                            <div class="questoes-stats-val" id="session-accuracy-pct" style="color: var(--accent);">0%</div>
+                                            <div style="font-size: 11px; color: var(--text-secondary);">Aproveitam.</div>
+                                        </div>
+                                    </div>
+                                    <div class="countdown-container" style="margin-top: 16px; justify-content: center;">
+                                        <i class="fa-solid fa-stopwatch"></i>
+                                        <span id="session-timer">00:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Área Principal da Questão -->
+                        <div class="questoes-main">
+                            <div class="panel-card question-card" id="active-question-card" style="display: none;">
+                                <div>
+                                    <div class="question-metadata">
+                                        <span class="meta-tag" id="q-meta-subject">Matéria</span>
+                                        <span class="meta-tag" id="q-meta-topic">Tópico</span>
+                                        <span class="meta-tag" id="q-meta-origin">CEBRASPE 2017</span>
+                                        <span class="meta-tag hot" id="q-meta-hot" style="display: none;">TÓPICO QUENTE</span>
+                                    </div>
+                                    <div class="question-statement" id="q-statement-text">
+                                        Clique em "Iniciar Sessão" para carregar as questões e praticar!
+                                    </div>
+                                </div>
+
+                                <div class="question-actions-container">
+                                    <div class="cebraspe-buttons" id="q-cebraspe-buttons">
+                                        <button class="btn-certo" id="btn-answer-certo">
+                                            <i class="fa-solid fa-check"></i> CERTO
+                                        </button>
+                                        <button class="btn-errado" id="btn-answer-errado">
+                                            <i class="fa-solid fa-xmark"></i> ERRADO
+                                        </button>
+                                    </div>
+
+                                    <!-- Feedback imediato -->
+                                    <div class="feedback-panel" id="q-feedback-panel" style="display: none;">
+                                        <div class="feedback-header" id="q-feedback-header">
+                                            <i class="fa-solid fa-circle-check"></i> <span>Resposta Correta!</span>
+                                        </div>
+                                        <div class="feedback-comment" id="q-feedback-comment">
+                                            Comentário do professor...
+                                        </div>
+                                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                                            <button class="btn btn-outline" id="btn-add-to-errors" style="font-size: 12px;">
+                                                <i class="fa-solid fa-triangle-exclamation"></i> Registrar no Caderno de Erros
+                                            </button>
+                                            <button class="btn btn-primary" id="btn-next-question" style="font-size: 12px;">
+                                                Próxima Questão <i class="fa-solid fa-chevron-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="panel-card" id="placeholder-question-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 350px; text-align: center;">
+                                <i class="fa-solid fa-graduation-cap" style="font-size: 64px; color: var(--accent); margin-bottom: 24px; opacity: 0.5;"></i>
+                                <h2>Treinamento Cebraspe Certo/Errado</h2>
+                                <p style="color: var(--text-secondary); max-width: 500px; margin-top: 12px; margin-bottom: 24px;">
+                                    Selecione os filtros desejados na barra lateral e clique em <b>Iniciar Sessão</b> para treinar com a base de 6.858 questões Cebraspe comentadas.
+                                </p>
+                            </div>
+
+                            <div class="panel-card" id="end-session-card" style="display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 350px; text-align: center;">
+                                <i class="fa-solid fa-trophy" style="font-size: 64px; color: var(--warning); margin-bottom: 24px;"></i>
+                                <h2>Sessão Concluída!</h2>
+                                <p style="color: var(--text-secondary); max-width: 500px; margin-top: 12px; margin-bottom: 24px;" id="end-session-summary">
+                                    Você resolveu 10 questões, com 8 acertos e 2 erros. Aproveitamento de 80%.
+                                </p>
+                                <div style="display: flex; gap: 12px;">
+                                    <button class="btn btn-primary" id="btn-save-session-history">
+                                        <i class="fa-solid fa-floppy-disk"></i> Salvar no Histórico com 1 Clique
+                                    </button>
+                                    <button class="btn btn-outline" id="btn-restart-session">
+                                        <i class="fa-solid fa-rotate-left"></i> Nova Prática
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- ABA 6: CONFIGURAÇÕES -->
                 <section id="tab-config" class="tab-pane">
                     <div class="config-layout">
@@ -485,9 +658,12 @@
                             <div class="card-body">
                                 <p class="config-help-text">Caso queira testar a plataforma sem configurar a planilha do Google Sheets, você pode utilizar o banco de dados interno do navegador (localStorage).</p>
                                 
-                                <div class="config-actions" style="margin-bottom: 20px;">
+                                <div class="config-actions" style="margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap;">
                                     <button class="btn btn-secondary" id="btn-use-demo-data">
                                         <i class="fa-solid fa-vial"></i> Carregar Dados Demo
+                                    </button>
+                                    <button class="btn btn-primary" id="btn-generate-60day-plan" style="background: var(--warning); border-color: var(--warning); color: #000; font-weight: 600;">
+                                        <i class="fa-solid fa-calendar-days"></i> Gerar Cronograma 60 Dias
                                     </button>
                                     <button class="btn btn-danger" id="btn-clear-local-db">
                                         <i class="fa-solid fa-trash-can"></i> Limpar Dados Locais
@@ -668,6 +844,39 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary btn-block" onclick="closeModal('modal-crono-choices')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: DETALHES DE TÓPICOS QUENTES DO TENENTE -->
+    <div class="modal-overlay" id="modal-hot-topics-detail">
+        <div class="modal-container modal-large">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-fire" style="color: var(--danger);"></i> Prioridades do Tenente - Tópicos Quentes</h3>
+                <button class="modal-close" onclick="closeModal('modal-hot-topics-detail')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                    Estes são os 24 tópicos quentes do Tenente identificados para o edital retificado. Estude-os prioritariamente para cobrir os pontos mais cobrados da banca.
+                </p>
+                <div class="table-container" style="max-height: 450px; overflow-y: auto;">
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">Matéria</th>
+                                <th style="width: 45%;">Tópico do Edital</th>
+                                <th style="width: 15%;">Status</th>
+                                <th style="width: 15%;">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hot-topics-detail-rows">
+                            <!-- Preenchido via Javascript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-hot-topics-detail')">Fechar</button>
             </div>
         </div>
     </div>

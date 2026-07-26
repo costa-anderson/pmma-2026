@@ -38,6 +38,10 @@ function doPost(e) {
     return handleUpdateCrono(data);
   } else if (action === 'toggleErrorReview') {
     return handleToggleErrorReview(data);
+  } else if (action === 'deleteHistoryItem') {
+    return handleDeleteHistoryItem(data);
+  } else if (action === 'editHistoryItem') {
+    return handleEditHistoryItem(data);
   }
   
   return createResponse({ status: 'error', message: 'Ação POST desconhecida.' });
@@ -278,11 +282,136 @@ function handleToggleErrorReview(data) {
       if (rowSimId === simId && rowSubject === subject && rowTopic === topic) {
         // Coluna H (Índice 7): Precisa Revisar (Sim/Não)
         sheet.getRange(i + 1, 8).setValue(data.needsReview ? 'Sim' : 'Não');
+        if (data.notes !== undefined) {
+          // Coluna G (Índice 6): Anotações do Erro
+          sheet.getRange(i + 1, 7).setValue(data.notes);
+        }
         return createResponse({ status: 'success', message: 'Status de revisão de erro atualizado!' });
       }
     }
     
     return createResponse({ status: 'error', message: 'Registro de detalhe de simulado não encontrado.' });
+  } catch (e) {
+    return createResponse({ status: 'error', message: e.toString() });
+  }
+}
+
+function handleDeleteHistoryItem(data) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    if (data.cat === 'Estudo Diário') {
+      var sheet = ss.getSheetByName('Registro de Estudos');
+      if (!sheet) return createResponse({ status: 'error', message: 'Aba Registro de Estudos não encontrada.' });
+      var values = sheet.getDataRange().getValues();
+      for (var i = values.length - 1; i >= 1; i--) {
+        if (values[i][0] === data.date && values[i][1] === data.subject && values[i][2] === data.topic && values[i][3] === data.type) {
+          sheet.deleteRow(i + 1);
+          return createResponse({ status: 'success', message: 'Registro de estudo excluído!' });
+        }
+      }
+    } else if (data.cat === 'Simulado Teórico') {
+      var sheetCab = ss.getSheetByName('Simulados Cabecalho');
+      var sheetDet = ss.getSheetByName('Simulados Detalhes');
+      if (sheetCab) {
+        var vals = sheetCab.getDataRange().getValues();
+        for (var i = vals.length - 1; i >= 1; i--) {
+          if (vals[i][0] === data.id) {
+            sheetCab.deleteRow(i + 1);
+            break;
+          }
+        }
+      }
+      if (sheetDet) {
+        var vals = sheetDet.getDataRange().getValues();
+        for (var i = vals.length - 1; i >= 1; i--) {
+          if (vals[i][0] === data.id) {
+            sheetDet.deleteRow(i + 1);
+          }
+        }
+      }
+      return createResponse({ status: 'success', message: 'Simulado excluído!' });
+    } else if (data.cat === 'Treino TAF') {
+      var sheet = ss.getSheetByName('Treino do TAF');
+      if (!sheet) return createResponse({ status: 'error', message: 'Aba Treino do TAF não encontrada.' });
+      var values = sheet.getDataRange().getValues();
+      for (var i = values.length - 1; i >= 1; i--) {
+        if (values[i][0] === data.date && values[i][1] === data.exercise) {
+          sheet.deleteRow(i + 1);
+          return createResponse({ status: 'success', message: 'Registro de treino excluído!' });
+        }
+      }
+    } else if (data.cat === 'Simulado TAF Completo') {
+      var sheet = ss.getSheetByName('Simulados do TAF');
+      if (!sheet) return createResponse({ status: 'error', message: 'Aba Simulados do TAF não encontrada.' });
+      var values = sheet.getDataRange().getValues();
+      for (var i = values.length - 1; i >= 1; i--) {
+        if (values[i][0] === data.date) {
+          sheet.deleteRow(i + 1);
+          return createResponse({ status: 'success', message: 'Registro de simulado TAF excluído!' });
+        }
+      }
+    }
+    
+    return createResponse({ status: 'error', message: 'Tipo de registro não encontrado ou inválido.' });
+  } catch (e) {
+    return createResponse({ status: 'error', message: e.toString() });
+  }
+}
+
+function handleEditHistoryItem(data) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    if (data.cat === 'Estudo Diário') {
+      var sheet = ss.getSheetByName('Registro de Estudos');
+      if (!sheet) return createResponse({ status: 'error', message: 'Aba Registro de Estudos não encontrada.' });
+      var values = sheet.getDataRange().getValues();
+      for (var i = 1; i < values.length; i++) {
+        if (values[i][0] === data.oldDate && values[i][1] === data.oldSubject && values[i][2] === data.oldTopic && values[i][3] === data.oldType) {
+          sheet.getRange(i + 1, 5).setValue(data.duration);
+          sheet.getRange(i + 1, 6).setValue(data.questions);
+          sheet.getRange(i + 1, 7).setValue(data.correct);
+          sheet.getRange(i + 1, 8).setValue(data.questions - data.correct);
+          sheet.getRange(i + 1, 9).setValue(data.correct / (data.questions || 1));
+          sheet.getRange(i + 1, 10).setValue(data.notes);
+          return createResponse({ status: 'success', message: 'Estudo atualizado!' });
+        }
+      }
+    } else if (data.cat === 'Treino TAF') {
+      var sheet = ss.getSheetByName('Treino do TAF');
+      if (!sheet) return createResponse({ status: 'error', message: 'Aba Treino do TAF não encontrada.' });
+      var values = sheet.getDataRange().getValues();
+      for (var i = 1; i < values.length; i++) {
+        if (values[i][0] === data.oldDate && values[i][1] === data.oldExercise) {
+          sheet.getRange(i + 1, 3).setValue(data.result);
+          sheet.getRange(i + 1, 5).setValue(data.result / (values[i][3] || 1));
+          sheet.getRange(i + 1, 6).setValue(data.result >= values[i][3] ? 'META ALCANÇADA' : 'ABAIXO DA META');
+          sheet.getRange(i + 1, 7).setValue(data.sets || '');
+          sheet.getRange(i + 1, 8).setValue(data.restTime || '');
+          sheet.getRange(i + 1, 9).setValue(data.duration || '');
+          return createResponse({ status: 'success', message: 'Treino TAF atualizado!' });
+        }
+      }
+    } else if (data.cat === 'Simulado TAF Completo') {
+      var sheet = ss.getSheetByName('Simulados do TAF');
+      if (!sheet) return createResponse({ status: 'error', message: 'Aba Simulados do TAF não encontrada.' });
+      var values = sheet.getDataRange().getValues();
+      for (var i = 1; i < values.length; i++) {
+        if (values[i][0] === data.oldDate) {
+          sheet.getRange(i + 1, 2).setValue(data.barra);
+          sheet.getRange(i + 1, 3).setValue(data.sugado);
+          sheet.getRange(i + 1, 4).setValue(data.abdominal);
+          sheet.getRange(i + 1, 5).setValue(data.corrida);
+          sheet.getRange(i + 1, 6).setValue(data.duration);
+          sheet.getRange(i + 1, 7).setValue(data.passed ? 'APROVADO NO TAF' : 'NÃO ALCANÇADO');
+          sheet.getRange(i + 1, 8).setValue(data.notes || '');
+          return createResponse({ status: 'success', message: 'Simulado TAF atualizado!' });
+        }
+      }
+    }
+    
+    return createResponse({ status: 'error', message: 'Ação de edição não suportada.' });
   } catch (e) {
     return createResponse({ status: 'error', message: e.toString() });
   }
