@@ -1535,8 +1535,87 @@ function renderRevisaoQuestion() {
     // Renderizar o enunciado
     document.getElementById("revisao-quiz-statement").innerHTML = enunciation;
     
-    // Se já respondeu (caso de retomada ou navegação)
+    // Habilitar botões e gerenciar modo de escolha (Múltipla Escolha vs Certo/Errado)
+    const isMultipleChoice = q.options && Object.keys(q.options).length > 2;
+    const actionsBox = document.getElementById("revisao-quiz-actions");
+    const optionsBox = document.getElementById("revisao-quiz-options");
+    
+    // Recupera se já respondeu
     const savedAnswer = revisaoState.answers[revisaoState.currentIndex];
+    
+    if (isMultipleChoice) {
+        actionsBox.style.display = "none";
+        optionsBox.style.display = "flex";
+        optionsBox.innerHTML = "";
+        
+        Object.entries(q.options).forEach(([letter, text]) => {
+            const btn = document.createElement("button");
+            btn.className = "btn revisao-option-btn";
+            btn.setAttribute("data-letter", letter);
+            
+            // Estilização premium
+            btn.style.textAlign = "left";
+            btn.style.padding = "1rem 1.25rem";
+            btn.style.fontSize = "1rem";
+            btn.style.background = "rgba(255, 255, 255, 0.02)";
+            btn.style.border = "1px solid var(--border-light)";
+            btn.style.borderRadius = "8px";
+            btn.style.color = "var(--text-secondary)";
+            btn.style.cursor = "pointer";
+            btn.style.transition = "all 0.2s ease";
+            btn.style.display = "flex";
+            btn.style.gap = "0.75rem";
+            btn.style.alignItems = "flex-start";
+            btn.style.width = "100%";
+            btn.style.marginBottom = "0.25rem";
+            
+            btn.innerHTML = `<span style="font-weight: 700; color: var(--accent); background: rgba(59, 130, 246, 0.1); width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; flex-shrink: 0;">${letter.toUpperCase()}</span> <span style="line-height: 1.4;">${text}</span>`;
+            
+            // Se já respondeu
+            if (savedAnswer) {
+                btn.disabled = true;
+                if (letter === q.answer) {
+                    btn.style.background = "rgba(16, 185, 129, 0.15)";
+                    btn.style.borderColor = "var(--success)";
+                    btn.style.color = "#fff";
+                } else if (letter === savedAnswer.choice) {
+                    btn.style.background = "rgba(239, 68, 68, 0.15)";
+                    btn.style.borderColor = "var(--danger)";
+                    btn.style.color = "#fff";
+                }
+            } else {
+                btn.addEventListener("click", () => revisaoAnswer(letter));
+                
+                // Efeitos visuais hover
+                btn.addEventListener("mouseenter", () => {
+                    btn.style.background = "rgba(255, 255, 255, 0.04)";
+                    btn.style.borderColor = "var(--accent)";
+                    btn.style.transform = "translateX(4px)";
+                });
+                btn.addEventListener("mouseleave", () => {
+                    btn.style.background = "rgba(255, 255, 255, 0.02)";
+                    btn.style.borderColor = "var(--border-light)";
+                    btn.style.transform = "translateX(0)";
+                });
+            }
+            
+            optionsBox.appendChild(btn);
+        });
+    } else {
+        actionsBox.style.display = "grid";
+        optionsBox.style.display = "none";
+        
+        const btnCerto = document.getElementById("revisao-btn-certo");
+        const btnErrado = document.getElementById("revisao-btn-errado");
+        
+        btnCerto.disabled = !!savedAnswer;
+        btnErrado.disabled = !!savedAnswer;
+        
+        btnCerto.onclick = savedAnswer ? null : () => revisaoAnswer("c");
+        btnErrado.onclick = savedAnswer ? null : () => revisaoAnswer("e");
+    }
+    
+    // Se já respondeu (caso de retomada ou navegação)
     if (savedAnswer) {
         showRevisaoFeedback(savedAnswer.choice);
     }
@@ -1561,12 +1640,10 @@ function revisaoAnswer(userChoice) {
     
     // Gerenciador do Caderno de Erros baseado nos IDs das questões
     if (!isCorrect) {
-        // Adiciona à lista de erros se já não estiver lá
         if (!state.erros_questoes.includes(q.id)) {
             state.erros_questoes.push(q.id);
         }
     } else {
-        // Remove da lista de erros ao acertar
         state.erros_questoes = state.erros_questoes.filter(id => id !== q.id);
     }
     saveDataLocal(); // Salva estado de erros e respondidas do usuário
@@ -1575,13 +1652,32 @@ function revisaoAnswer(userChoice) {
     document.getElementById("revisao-btn-certo").disabled = true;
     document.getElementById("revisao-btn-errado").disabled = true;
     
+    // Desabilitar opções de múltipla escolha se houver e destacar cores de feedback
+    const isMultipleChoice = q.options && Object.keys(q.options).length > 2;
+    if (isMultipleChoice) {
+        const optionBtns = document.getElementById("revisao-quiz-options").querySelectorAll("button");
+        optionBtns.forEach(btn => {
+            btn.disabled = true;
+            const letter = btn.getAttribute("data-letter");
+            if (letter === q.answer) {
+                btn.style.background = "rgba(16, 185, 129, 0.15)";
+                btn.style.borderColor = "var(--success)";
+                btn.style.color = "#fff";
+            } else if (letter === userChoice) {
+                btn.style.background = "rgba(239, 68, 68, 0.15)";
+                btn.style.borderColor = "var(--danger)";
+                btn.style.color = "#fff";
+            }
+        });
+    }
+    
     if (revisaoState.mode === "estudo") {
         showRevisaoFeedback(userChoice);
     } else {
-        // No Modo Simulado: avança automaticamente ou finaliza sem dar pistas
+        // No Modo Simulado: avança automaticamente ou finaliza
         setTimeout(() => {
             revisaoNextQuestion();
-        }, 300);
+        }, 800);
     }
 }
 
@@ -1609,7 +1705,16 @@ function showRevisaoFeedback(userChoice) {
     
     feedbackPanel.className = "revisao-feedback-panel " + (isCorrect ? "correct" : "wrong");
     statusEl.innerHTML = isCorrect ? '✅ Você Acertou! <i class="fa-solid fa-circle-check"></i>' : '❌ Você Errou! <i class="fa-solid fa-circle-xmark"></i>';
-    answerEl.textContent = q.answer === "c" ? "Certo" : "Errado";
+    
+    // Mostra texto amigável do gabarito dependendo do tipo de questão
+    const isMultipleChoice = q.options && Object.keys(q.options).length > 2;
+    if (isMultipleChoice) {
+        const correctText = q.options[q.answer] || "";
+        answerEl.innerHTML = `<span style="text-transform: uppercase; font-weight: 700; color: var(--success);">${q.answer.toUpperCase()}</span> - ${correctText}`;
+    } else {
+        answerEl.textContent = q.answer === "c" ? "Certo" : "Errado";
+    }
+    
     commentEl.innerHTML = q.comment || "Sem comentários adicionais cadastrados.";
     
     // Lógica para detectar pegadinhas de forma inteligente no comentário
@@ -1621,7 +1726,6 @@ function showRevisaoFeedback(userChoice) {
     if (isTrapDetected) {
         let sentenceTrap = "Cuidado com termos restritivos (único, exclusivamente, apenas) ou negações. A banca costuma usá-los para invalidar assertivas.";
         
-        // Tenta isolar a frase específica do comentário que fala sobre cuidado/pegadinha
         const sentences = q.comment.split(/[.!?]/);
         const matchSentence = sentences.find(s => {
             const normalizedSentence = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -1640,8 +1744,9 @@ function showRevisaoFeedback(userChoice) {
     
     feedbackPanel.style.display = "block";
     
-    // Ocultar botões Certo/Errado e mostrar Avançar
+    // Ocultar botões de resposta e mostrar Avançar
     document.getElementById("revisao-quiz-actions").style.display = "none";
+    document.getElementById("revisao-quiz-options").style.display = "none";
     document.getElementById("revisao-quiz-nav").style.display = "flex";
 }
 
