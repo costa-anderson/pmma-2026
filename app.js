@@ -1208,7 +1208,11 @@ function populateRevisaoTopics(semana) {
                 <span class="revisao-checklist-item-title">${t.topic}</span>
                 <span class="revisao-checklist-item-subject">${t.subject}</span>
             </div>
-            <span class="revisao-checklist-item-badge">${count} Qs</span>
+            <div class="revisao-checklist-item-qty" style="display: flex; align-items: center; gap: 6px;">
+                <label style="font-size: 0.75rem; color: var(--text-muted);">Qtd:</label>
+                <input type="number" id="topic-qty-${i}" class="revisao-topic-qty-input" min="0" max="${count}" value="${Math.min(count, 5)}" style="width: 50px; background: rgba(0,0,0,0.3); border: 1px solid rgba(216,176,76,0.3); color: white; border-radius: 6px; padding: 4px; text-align: center; font-size: 0.85rem;" onclick="event.stopPropagation();">
+                <span class="revisao-checklist-item-badge">de ${count}</span>
+            </div>
         `;
         
         // Listener para evitar que o clique no checkbox cause dupla ação se clicado no elemento pai
@@ -1276,19 +1280,9 @@ function startRevisao(resumeFromPaused) {
         return;
     }
     
-    const checkboxes = document.getElementById("revisao-topics-list").querySelectorAll("input[type='checkbox']:checked");
-    if (checkboxes.length === 0) {
-        alert("Por favor, marque pelo menos um tema para revisão.");
-        return;
-    }
-    
+    const checkboxes = document.getElementById("revisao-topics-list").querySelectorAll("input[type='checkbox']");
     const selectedTopics = [];
-    checkboxes.forEach(chk => {
-        selectedTopics.push({
-            subject: chk.getAttribute("data-subject"),
-            topic: chk.getAttribute("data-topic")
-        });
-    });
+    const finalQuestions = [];
     
     // Helpers de normalização e filtragem
     const cleanText = (text) => {
@@ -1303,19 +1297,26 @@ function startRevisao(resumeFromPaused) {
         return words.filter(w => !stops.has(w));
     };
 
-    // Filtrar questões correspondentes
-    let pool = bancoQuestoes;
-    
-    // 1. Filtrar pelos tópicos selecionados
-    pool = pool.filter(q => {
-        const qSubj = cleanText(q.subject);
-        const qTextClean = cleanText(q.statement + " " + (q.topic || ""));
-        const qWords = new Set(qTextClean.match(/[a-z0-9]{3,}/g) || []);
+    const cebraspeOnly = document.getElementById("revisao-cebraspe-only").checked;
+    const errorsOnly = document.getElementById("revisao-errors-only").checked;
+    const errIds = new Set(state.erros_questoes || []);
+
+    checkboxes.forEach((chk, i) => {
+        if (!chk.checked) return;
         
-        return selectedTopics.some(t => {
-            const tSubjClean = cleanText(t.subject);
+        const subj = chk.getAttribute("data-subject");
+        const topic = chk.getAttribute("data-topic");
+        const qty = parseInt(document.getElementById(`topic-qty-${i}`).value) || 0;
+        
+        if (qty === 0) return;
+        
+        selectedTopics.push({ subject: subj, topic: topic });
+        
+        // Filtra questões do banco para ESTE tópico específico
+        let topicPool = bancoQuestoes.filter(q => {
+            const qSubj = cleanText(q.subject);
+            const tSubjClean = cleanText(subj);
             let subjectMatches = qSubj === tSubjClean;
-            // Remapeia se for informática/legislação
             if ((tSubjClean.includes("legisla") || tSubjClean.includes("informa")) && qSubj === "legislacao institucional") {
                 subjectMatches = true;
             }
@@ -1324,48 +1325,54 @@ function startRevisao(resumeFromPaused) {
             }
             
             if (subjectMatches) {
-                const tKeywords = getKeywords(t.topic);
+                const qTextClean = cleanText(q.statement + " " + (q.topic || ""));
+                const qWords = new Set(qTextClean.match(/[a-z0-9]{3,}/g) || []);
+                const tKeywords = getKeywords(topic);
                 const overlap = tKeywords.filter(w => qWords.has(w));
                 return overlap.length >= 1;
             }
             return false;
         });
+        
+        // Aplica os filtros gerais de Cebraspe e Erros
+        if (cebraspeOnly) {
+            topicPool = topicPool.filter(q => {
+                const isLeg = q.id.startsWith("Q-LEG");
+                const isCespeInfo = q.info && (q.info.toUpperCase().includes("CESPE") || q.info.toUpperCase().includes("CEBRASPE"));
+                const isCespeComment = q.comment && (q.comment.toUpperCase().includes("CESPE") || q.comment.toUpperCase().includes("CEBRASPE"));
+                return isLeg || isCespeInfo || isCespeComment;
+            });
+        }
+        
+        if (errorsOnly) {
+            topicPool = topicPool.filter(q => errIds.has(q.id));
+        }
+        
+        // Randomiza e fatia na quantidade selecionada
+        const shuffledTopicPool = topicPool.sort(() => 0.5 - Math.random());
+        const selectedForTopic = shuffledTopicPool.slice(0, qty);
+        
+        // Junta na lista geral de questões sem duplicar
+        selectedForTopic.forEach(q => {
+            if (!finalQuestions.some(existing => existing.id === q.id)) {
+                finalQuestions.push(q);
+            }
+        });
     });
     
-    // 2. Filtro Cebraspe (Procura por CESPE, CEBRASPE ou questões de ID Q-LEG)
-    const cebraspeOnly = document.getElementById("revisao-cebraspe-only").checked;
-    if (cebraspeOnly) {
-        pool = pool.filter(q => {
-            const isLeg = q.id.startsWith("Q-LEG");
-            const isCespeInfo = q.info && (q.info.toUpperCase().includes("CESPE") || q.info.toUpperCase().includes("CEBRASPE"));
-            const isCespeComment = q.comment && (q.comment.toUpperCase().includes("CESPE") || q.comment.toUpperCase().includes("CEBRASPE"));
-            return isLeg || isCespeInfo || isCespeComment;
-        });
-    }
-    
-    // 3. Filtro Caderno de Erros (Apenas questões erradas anteriormente)
-    const errorsOnly = document.getElementById("revisao-errors-only").checked;
-    if (errorsOnly) {
-        const errIds = new Set(state.erros_questoes || []);
-        pool = pool.filter(q => errIds.has(q.id));
-    }
-    
-    if (pool.length === 0) {
-        alert("Nenhuma questão foi encontrada no banco com os filtros selecionados. Tente selecionar mais temas ou desmarcar a opção 'Apenas CEBRASPE' / 'Focar em Questões Erradas'.");
+    if (selectedTopics.length === 0) {
+        alert("Por favor, marque pelo menos um tema de revisão e defina uma quantidade maior que zero.");
         return;
     }
     
-    // 4. Limitar quantidade de questões
-    let limitVal = document.getElementById("revisao-limit-select").value;
-    let limit = limitVal === "all" ? pool.length : parseInt(limitVal);
-    
-    // Embaralhar o pool
-    const shuffled = pool.sort(() => 0.5 - Math.random());
-    const finalQuestions = shuffled.slice(0, limit);
+    if (finalQuestions.length === 0) {
+        alert("Nenhuma questão foi encontrada no banco com as opções e quantidades selecionadas. Tente alterar as quantidades ou desmarcar a opção 'Apenas CEBRASPE' / 'Focar em Questões Erradas'.");
+        return;
+    }
     
     // Configurar estado
     revisaoState = {
-        questions: finalQuestions,
+        questions: finalQuestions.sort(() => 0.5 - Math.random()), // Mistura final das matérias selecionadas
         currentIndex: 0,
         mode: document.getElementById("revisao-mode-select").value,
         answers: new Array(finalQuestions.length).fill(null),
@@ -1818,12 +1825,12 @@ function initSheetsConfigListeners() {
     if (gearBtn) {
         gearBtn.onclick = () => {
             urlInput.value = SHEET_WEBAPP_URL;
-            modal.style.display = "block";
+            openModal("modal-config-sheets");
         };
     }
 
     const closeConfig = () => {
-        modal.style.display = "none";
+        closeModal("modal-config-sheets");
     };
 
     if (closeBtn) closeBtn.onclick = closeConfig;
