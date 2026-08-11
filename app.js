@@ -1450,18 +1450,79 @@ function renderRevisaoQuestion() {
     // Renderizar Texto associado se houver (procura por "Texto para" ou delimitadores)
     const textAssociatedBox = document.getElementById("revisao-quiz-text-associated");
     
-    // Algumas questões têm enunciados complexos. Se encontrarmos tags de imagem ou quebras de texto que indicam texto base, organizamos
     let stmt = q.statement;
     let textAssociated = "";
+    let enunciation = stmt;
     
-    // Se o enunciado contiver uma situação hipotética identificada
+    // 1. Tenta identificar e separar Texto Base
+    const textRegex = /(texto\s+[ivxldcm\d]+|texto:)/i;
+    const promptRegex = /(acerca\s+desse\s+assunto,\s+julgue\s+o\s+item|julgue\s+o\s+item|acerca\s+das\s+informações|com\s+relação\s+a\b|assinale\s+a\s+alternativa|com\s+base\b|considerando\b|tendo\s+em\s+vista\b)/i;
+    
+    if (textRegex.test(stmt) && promptRegex.test(stmt)) {
+        const promptMatch = stmt.match(promptRegex);
+        if (promptMatch) {
+            const splitPos = promptMatch.index;
+            let rawTextPart = stmt.slice(0, splitPos).trim();
+            enunciation = stmt.slice(splitPos).trim();
+            
+            // Tenta extrair a fonte/referência ao final do texto
+            let sourceText = "";
+            const sourceRegex = /(\b(?:fonte|disponivel\s+em|adaptado\s+de|extraido\s+de)\b.*)$/i;
+            const sourceMatch = rawTextPart.match(sourceRegex);
+            
+            if (sourceMatch) {
+                sourceText = sourceMatch[1].trim();
+                rawTextPart = rawTextPart.slice(0, sourceMatch.index).trim();
+            } else {
+                const parenSourceRegex = /(\([^)]+\b\d{4}\b[^)]*\))$/;
+                const parenMatch = rawTextPart.match(parenSourceRegex);
+                if (parenMatch) {
+                    sourceText = parenMatch[1].trim();
+                    rawTextPart = rawTextPart.slice(0, parenMatch.index).trim();
+                }
+            }
+            
+            // Extrair o título (ex: "Texto I")
+            const titleMatch = rawTextPart.match(textRegex);
+            let titleHtml = "";
+            let bodyText = rawTextPart;
+            if (titleMatch) {
+                const titleText = titleMatch[1].trim();
+                titleHtml = `<div style="font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--accent); text-align: center;">${titleText}</div>`;
+                bodyText = rawTextPart.replace(titleMatch[0], "").trim();
+            }
+            
+            let sourceHtml = "";
+            if (sourceText) {
+                sourceHtml = `<div style="text-align: right; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; font-style: italic;">${sourceText}</div>`;
+            }
+            
+            // Remove pontuação de início se sobrar
+            if (bodyText.startsWith(":") || bodyText.startsWith("-") || bodyText.startsWith(".")) {
+                bodyText = bodyText.slice(1).trim();
+            }
+            
+            textAssociated = `
+                <div class="revisao-formatted-text-container" style="background: rgba(255, 255, 255, 0.015); border: 1px solid var(--border-light); border-left: 3px solid var(--accent); padding: 1.25rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.95rem; line-height: 1.6; color: var(--text-secondary);">
+                    ${titleHtml}
+                    <div style="text-align: justify;">${bodyText}</div>
+                    ${sourceHtml}
+                </div>
+            `;
+        }
+    }
+    
+    // 2. Se o enunciado contiver uma situação hipotética identificada
     if (stmt.toLowerCase().includes("situação hipotética:")) {
         const parts = stmt.split(/situação hipotética:/i);
-        textAssociated = `<strong>Situação Hipotética:</strong> ${parts[1].split(/assertiva:|assertivas:|julgue o item:|acerca desse assunto/i)[0].trim()}`;
-        
-        // Reconstrói a assertiva
+        const sitPart = parts[1].split(/assertiva:|assertivas:|julgue o item:|acerca desse assunto/i)[0].trim();
+        textAssociated += `
+            <div class="revisao-sit-box" style="background: rgba(16, 185, 129, 0.05); border-left: 3px solid var(--success); padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; font-size: 0.95rem; color: var(--text-primary); border: 1px solid rgba(16, 185, 129, 0.15);">
+                <strong>Situação Hipotética:</strong> ${sitPart}
+            </div>
+        `;
         const assertivaParts = stmt.split(/assertiva:|assertivas:|julgue o item:/i);
-        stmt = assertivaParts.length > 1 ? `<strong>Assertiva:</strong> ${assertivaParts[1].trim()}` : stmt;
+        enunciation = assertivaParts.length > 1 ? `<strong>Assertiva:</strong> ${assertivaParts[1].trim()}` : enunciation;
     }
     
     if (textAssociated) {
@@ -1472,7 +1533,7 @@ function renderRevisaoQuestion() {
     }
     
     // Renderizar o enunciado
-    document.getElementById("revisao-quiz-statement").innerHTML = stmt;
+    document.getElementById("revisao-quiz-statement").innerHTML = enunciation;
     
     // Se já respondeu (caso de retomada ou navegação)
     const savedAnswer = revisaoState.answers[revisaoState.currentIndex];
