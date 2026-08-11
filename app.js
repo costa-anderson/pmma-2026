@@ -135,6 +135,7 @@ async function loadData() {
             state = JSON.parse(localData);
             if (!state.erros_questoes) state.erros_questoes = [];
             if (!state.respondidas_questoes) state.respondidas_questoes = [];
+            if (!state.historico_estudos) state.historico_estudos = [];
             console.log("Dados carregados do localStorage.");
             appDataReady();
             return;
@@ -150,6 +151,7 @@ async function loadData() {
             state = await response.json();
             if (!state.erros_questoes) state.erros_questoes = [];
             if (!state.respondidas_questoes) state.respondidas_questoes = [];
+            if (!state.historico_estudos) state.historico_estudos = [];
             saveDataLocal();
             console.log("Dados carregados do arquivo pmma_data_export.json.");
         } else {
@@ -201,7 +203,12 @@ function renderDashboard() {
     
     // 1. Estatísticas Rápidas
     // Total horas estudadas
-    let totalMinutes = state.crono.reduce((acc, curr) => acc + (curr.duration || 0), 0);
+    let totalMinutes = 0;
+    if (state.historico_estudos && state.historico_estudos.length > 0) {
+        totalMinutes = state.historico_estudos.reduce((acc, curr) => acc + (curr.duration || 0), 0);
+    } else {
+        totalMinutes = state.crono.reduce((acc, curr) => acc + (curr.duration || 0), 0);
+    }
     const hrs = Math.floor(totalMinutes / 60);
     const mins = totalMinutes % 60;
     document.getElementById("val-total-hours").textContent = `${hrs}h ${mins}m`;
@@ -211,8 +218,15 @@ function renderDashboard() {
     document.getElementById("val-total-sessions").textContent = `${studiedCount} tópicos concluídos`;
     
     // Acerto de questões
-    let totalQuestions = state.crono.reduce((acc, curr) => acc + (curr.questions || 0), 0);
-    let totalCorrect = state.crono.reduce((acc, curr) => acc + (curr.correct || 0), 0);
+    let totalQuestions = 0;
+    let totalCorrect = 0;
+    if (state.historico_estudos && state.historico_estudos.length > 0) {
+        totalQuestions = state.historico_estudos.reduce((acc, curr) => acc + (curr.questions || 0), 0);
+        totalCorrect = state.historico_estudos.reduce((acc, curr) => acc + (curr.correct || 0), 0);
+    } else {
+        totalQuestions = state.crono.reduce((acc, curr) => acc + (curr.questions || 0), 0);
+        totalCorrect = state.crono.reduce((acc, curr) => acc + (curr.correct || 0), 0);
+    }
     let accuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0.0;
     
     document.getElementById("val-accuracy").textContent = `${accuracy.toFixed(1)}%`;
@@ -1908,52 +1922,197 @@ async function syncDataOnline() {
             
             // 1. Cronograma
             if (data['Cronograma'] && data['Cronograma'].length > 1) {
-                state.crono = data['Cronograma'].slice(1).map(row => {
-                    const isStudied = String(row[8] || "").toLowerCase() === "sim" || 
-                                      String(row[8] || "").toLowerCase() === "true" || 
-                                      String(row[8] || "").toLowerCase() === "concluído" || 
-                                      String(row[8] || "").toLowerCase() === "concluido" ||
-                                      row[8] === true;
-                    return {
-                        date: String(row[0] || ""),
-                        dia: String(row[1] || ""),
-                        semana: String(row[2] || ""),
-                        subject: String(row[3] || ""),
-                        topic: String(row[4] || ""),
-                        type: String(row[5] || ""),
-                        probability: String(row[6] || ""),
-                        hot: String(row[7] || "").includes("🔥"),
-                        studied: isStudied,
-                        duration: parseInt(row[9]) || 0,
-                        has_questions: String(row[10] || "").toLowerCase() === "sim" || row[10] === true,
-                        questions: parseInt(row[11]) || 0,
-                        correct: parseInt(row[12]) || 0,
-                        accuracy: parseFloat(row[13]) || 0.0,
-                        notes: String(row[14] || "")
-                    };
-                });
+                const header = data['Cronograma'][0];
+                const isNewFormat = header.includes("Matéria 1") || header.includes("Assunto 1") || header.length <= 11;
+                
+                if (isNewFormat) {
+                    state.crono = [];
+                    data['Cronograma'].slice(1).forEach(row => {
+                        const isCompleted = String(row[9] || "").toLowerCase() === "concluído" || 
+                                            String(row[9] || "").toLowerCase() === "concluido" || 
+                                            String(row[9] || "").toLowerCase() === "sim" || 
+                                            row[9] === true;
+                                            
+                        const date = String(row[0] || "");
+                        const dia = String(row[1] || "");
+                        const semana = String(row[2] || "");
+                        
+                        // Matéria 1
+                        if (row[3] && row[4]) {
+                            state.crono.push({
+                                date: date,
+                                dia: dia,
+                                semana: semana,
+                                subject: String(row[3]).trim(),
+                                topic: String(row[4]).trim(),
+                                type: "Teoria + Questões",
+                                probability: "Alta",
+                                hot: false,
+                                studied: isCompleted,
+                                duration: 0,
+                                questions: 0,
+                                correct: 0,
+                                accuracy: 0.0,
+                                notes: ""
+                            });
+                        }
+                        
+                        // Matéria 2
+                        if (row[5] && row[6]) {
+                            state.crono.push({
+                                date: date,
+                                dia: dia,
+                                semana: semana,
+                                subject: String(row[5]).trim(),
+                                topic: String(row[6]).trim(),
+                                type: "Teoria + Questões",
+                                probability: "Alta",
+                                hot: false,
+                                studied: isCompleted,
+                                duration: 0,
+                                questions: 0,
+                                correct: 0,
+                                accuracy: 0.0,
+                                notes: ""
+                            });
+                        }
+                    });
+                } else {
+                    // Formato antigo com colunas expandidas
+                    state.crono = data['Cronograma'].slice(1).map(row => {
+                        const isStudied = String(row[8] || "").toLowerCase() === "sim" || 
+                                          String(row[8] || "").toLowerCase() === "true" || 
+                                          String(row[8] || "").toLowerCase() === "concluído" || 
+                                          String(row[8] || "").toLowerCase() === "concluido" ||
+                                          row[8] === true;
+                        return {
+                            date: String(row[0] || ""),
+                            dia: String(row[1] || ""),
+                            semana: String(row[2] || ""),
+                            subject: String(row[3] || ""),
+                            topic: String(row[4] || ""),
+                            type: String(row[5] || ""),
+                            probability: String(row[6] || ""),
+                            hot: String(row[7] || "").includes("🔥"),
+                            studied: isStudied,
+                            duration: parseInt(row[9]) || 0,
+                            has_questions: String(row[10] || "").toLowerCase() === "sim" || row[10] === true,
+                            questions: parseInt(row[11]) || 0,
+                            correct: parseInt(row[12]) || 0,
+                            accuracy: parseFloat(row[13]) || 0.0,
+                            notes: String(row[14] || "")
+                        };
+                    });
+                }
             }
             
             // 2. Edital
             if (data['Controle do Edital'] && data['Controle do Edital'].length > 1) {
-                state.edital = data['Controle do Edital'].slice(1).map(row => {
-                    const isStudied = String(row[4] || "").toLowerCase() === "sim" || 
-                                      String(row[4] || "").toLowerCase() === "true" || 
-                                      String(row[4] || "").toLowerCase() === "concluído" || 
-                                      String(row[4] || "").toLowerCase() === "concluido" ||
-                                      row[4] === true;
-                    return {
-                        subject: String(row[0] || ""),
-                        topic: String(row[1] || ""),
-                        probability: String(row[2] || ""),
-                        hot: String(row[3] || "").includes("🔥"),
-                        studied: isStudied,
-                        notes: String(row[5] || "")
-                    };
-                });
+                const header = data['Controle do Edital'][0];
+                const isNewFormat = header[2] && header[2].includes("Estudado?");
+                
+                if (isNewFormat) {
+                    state.edital = data['Controle do Edital'].slice(1).map(row => {
+                        const isStudied = String(row[2] || "").toLowerCase() === "sim" || 
+                                          String(row[2] || "").toLowerCase() === "true" || 
+                                          row[2] === true;
+                        return {
+                            subject: String(row[0] || ""),
+                            topic: String(row[1] || ""),
+                            probability: "Alta",
+                            hot: false,
+                            studied: isStudied,
+                            questions: parseInt(row[3]) || 0,
+                            correct: parseInt(row[4]) || 0,
+                            accuracy: parseFloat(row[5]) || 0.0,
+                            notes: String(row[6] || "")
+                        };
+                    }).filter(e => e.subject && e.topic);
+                } else {
+                    state.edital = data['Controle do Edital'].slice(1).map(row => {
+                        const isStudied = String(row[4] || "").toLowerCase() === "sim" || 
+                                          String(row[4] || "").toLowerCase() === "true" || 
+                                          String(row[4] || "").toLowerCase() === "concluído" || 
+                                          String(row[4] || "").toLowerCase() === "concluido" ||
+                                          row[4] === true;
+                        return {
+                            subject: String(row[0] || ""),
+                            topic: String(row[1] || ""),
+                            probability: String(row[2] || ""),
+                            hot: String(row[3] || "").includes("🔥"),
+                            studied: isStudied,
+                            notes: String(row[5] || "")
+                        };
+                    }).filter(e => e.subject && e.topic);
+                }
             }
             
-            // 3. Treino TAF (Mapeia para state.taf_semanal de 'Simulados do TAF' / 'TAF_Semanal')
+            // 3. Treino TAF e TAF Semanal
+            if (data['Treino do TAF'] && data['Treino do TAF'].length > 1) {
+                const header = data['Treino do TAF'][0];
+                const isNewFormat = header[1] === "Exercício" || header.includes("Exercício");
+                
+                if (isNewFormat) {
+                    const tafByDate = {};
+                    data['Treino do TAF'].slice(1).forEach(row => {
+                        const date = String(row[0] || "");
+                        if (!date) return;
+                        
+                        if (!tafByDate[date]) {
+                            tafByDate[date] = {
+                                date: date,
+                                pullups: 0,
+                                meio_sugado: 0,
+                                abdominal: 0,
+                                running: 0,
+                                status: "Pendente",
+                                notes: ""
+                            };
+                        }
+                        
+                        const ex = String(row[1] || "").toLowerCase();
+                        const val = parseInt(row[2]) || 0;
+                        
+                        if (ex.includes("barra")) {
+                            tafByDate[date].pullups = val;
+                        } else if (ex.includes("sugado")) {
+                            tafByDate[date].meio_sugado = val;
+                        } else if (ex.includes("abdominal") || ex.includes("remador")) {
+                            tafByDate[date].abdominal = val;
+                        } else if (ex.includes("corrida") || ex.includes("12min")) {
+                            tafByDate[date].running = val;
+                        }
+                    });
+                    
+                    state.taf_semanal = Object.values(tafByDate).map(t => {
+                        const pullPass = t.pullups >= TAF_TARGETS.pullups;
+                        const sugadoPass = t.meio_sugado >= TAF_TARGETS.meio_sugado;
+                        const abdPass = t.abdominal >= TAF_TARGETS.abdominal;
+                        const runPass = t.running >= TAF_TARGETS.running;
+                        t.status = (pullPass && sugadoPass && abdPass && runPass) ? "Aprovado" : "Pendente";
+                        return t;
+                    });
+                    
+                    state.treinos = data['Treino do TAF'].slice(1).map(row => ({
+                        date: String(row[0] || ""),
+                        type: String(row[1] || ""),
+                        duration: parseInt(row[2]) || 0,
+                        intensity: parseInt(row[4]) || 0,
+                        notes: String(row[5] || "")
+                    }));
+                } else {
+                    state.taf_semanal = data['Treino do TAF'].slice(1).map(row => ({
+                        date: String(row[0] || ""),
+                        pullups: parseInt(row[1]) || 0,
+                        meio_sugado: parseInt(row[2]) || 0,
+                        abdominal: parseInt(row[3]) || 0,
+                        running: parseInt(row[4]) || 0,
+                        status: String(row[5] || ""),
+                        notes: String(row[6] || "")
+                    }));
+                }
+            }
+            
             if (data['Simulados do TAF'] && data['Simulados do TAF'].length > 1) {
                 state.taf_semanal = data['Simulados do TAF'].slice(1).map(row => ({
                     date: String(row[0] || ""),
@@ -1966,15 +2125,49 @@ async function syncDataOnline() {
                 }));
             }
             
-            // 4. Treinos Diários TAF (Mapeia para state.treinos de 'Treino do TAF' / 'Treinos')
-            if (data['Treino do TAF'] && data['Treino do TAF'].length > 1) {
-                state.treinos = data['Treino do TAF'].slice(1).map(row => ({
+            // 4. Registro de Estudos (Mapeia para state.historico_estudos e mescla no crono/edital)
+            if (data['Registro de Estudos'] && data['Registro de Estudos'].length > 1) {
+                state.historico_estudos = data['Registro de Estudos'].slice(1).map(row => ({
                     date: String(row[0] || ""),
-                    type: String(row[1] || ""),
-                    duration: parseInt(row[2]) || 0,
-                    intensity: parseInt(row[3]) || 0,
-                    notes: String(row[4] || "")
+                    subject: String(row[1] || ""),
+                    topic: String(row[2] || ""),
+                    type: String(row[3] || ""),
+                    duration: parseInt(row[4]) || 0,
+                    questions: parseInt(row[5]) || 0,
+                    correct: parseInt(row[6]) || 0,
+                    errors: parseInt(row[7]) || 0,
+                    notes: String(row[9] || "")
                 }));
+                
+                const studiesMap = {};
+                state.historico_estudos.forEach(log => {
+                    const key = `${log.subject.toLowerCase().trim()}|||${log.topic.toLowerCase().trim()}`;
+                    if (!studiesMap[key]) {
+                        studiesMap[key] = { duration: 0, questions: 0, correct: 0 };
+                    }
+                    studiesMap[key].duration += log.duration;
+                    studiesMap[key].questions += log.questions;
+                    studiesMap[key].correct += log.correct;
+                });
+                
+                state.crono.forEach(c => {
+                    const key = `${c.subject.toLowerCase().trim()}|||${c.topic.toLowerCase().trim()}`;
+                    if (studiesMap[key]) {
+                        c.duration = studiesMap[key].duration;
+                        c.questions = studiesMap[key].questions;
+                        c.correct = studiesMap[key].correct;
+                        c.accuracy = c.questions > 0 ? (c.correct / c.questions) : 0.0;
+                    }
+                });
+                
+                state.edital.forEach(e => {
+                    const key = `${e.subject.toLowerCase().trim()}|||${e.topic.toLowerCase().trim()}`;
+                    if (studiesMap[key]) {
+                        e.questions = studiesMap[key].questions;
+                        e.correct = studiesMap[key].correct;
+                        e.accuracy = e.questions > 0 ? (e.correct / e.questions) : 0.0;
+                    }
+                });
             }
             
             // 5. Simulados Cabecalho (Mapeia para state.simulados)
