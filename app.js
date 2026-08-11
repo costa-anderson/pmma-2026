@@ -1841,7 +1841,8 @@ function checkPendingSimulados() {
 // ☁️ INTEGRAÇÃO ONLINE COM GOOGLE SHEETS (SINC AUTOMÁTICA PC/CELULAR)
 // ==========================================================================
 
-let SHEET_WEBAPP_URL = localStorage.getItem("pmma_webapp_url") || "";
+const DEFAULT_SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyy0YaM30IC9GQ3EC2sdYnmzlA0KXwqtAryBdwy0kAIB8gLFKLyuaQPGhjo1MgM2Omp/exec";
+let SHEET_WEBAPP_URL = localStorage.getItem("pmma_webapp_url") || DEFAULT_SHEET_WEBAPP_URL;
 
 function initSheetsConfigListeners() {
     const gearBtn = document.getElementById("btn-config-sheets");
