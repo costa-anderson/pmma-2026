@@ -868,3 +868,235 @@ h1, h2, h3, h4, .brand-text h1, .metric-value {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================================
+   📚 ESTILOS DA ABA DE REVISÃO SEMANAL (QG V2)
+   ========================================================================== */
+
+.revisao-screen {
+    animation: fadeIn 0.4s ease-out;
+}
+
+.revisao-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.revisao-checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-standard);
+    border-radius: 8px;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.revisao-checklist-item:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent-glow);
+    transform: translateY(-1px);
+}
+
+.revisao-checklist-item input[type="checkbox"] {
+    width: auto;
+    height: auto;
+    margin-top: 0.25rem;
+    cursor: pointer;
+}
+
+.revisao-checklist-item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex-grow: 1;
+}
+
+.revisao-checklist-item-title {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.revisao-checklist-item-subject {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.revisao-checklist-item-badge {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 4px;
+    background: rgba(56, 189, 248, 0.08);
+    color: var(--accent);
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    margin-left: auto;
+    align-self: center;
+    white-space: nowrap;
+}
+
+/* Quiz UI elements */
+.revisao-meta-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.revisao-meta-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-standard);
+    color: var(--text-secondary);
+}
+
+.revisao-meta-tag.accent {
+    background: rgba(56, 189, 248, 0.08);
+    border-color: rgba(56, 189, 248, 0.15);
+    color: var(--accent);
+}
+
+.revisao-meta-tag.warning {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+}
+
+.revisao-meta-tag.danger {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+}
+
+.revisao-text-box {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Animações e Feedback */
+.revisao-feedback-panel {
+    animation: fadeIn 0.3s ease-out;
+    background: rgba(18, 24, 38, 0.8);
+    backdrop-filter: var(--blur);
+}
+
+.revisao-feedback-panel.correct {
+    border-color: var(--success);
+    box-shadow: 0 0 15px var(--success-glow);
+}
+
+.revisao-feedback-panel.correct h4 {
+    color: var(--success);
+}
+
+.revisao-feedback-panel.wrong {
+    border-color: var(--danger);
+    box-shadow: 0 0 15px var(--danger-glow);
+}
+
+.revisao-feedback-panel.wrong h4 {
+    color: var(--danger);
+}
+
+.revisao-trap-box {
+    animation: fadeIn 0.4s ease-out;
+}
+
+/* Botões do Quiz */
+.revisao-actions-grid button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.revisao-actions-grid #revisao-btn-certo {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.revisao-actions-grid #revisao-btn-certo:hover:not(:disabled) {
+    background: var(--success);
+    color: white;
+    box-shadow: 0 0 15px var(--success-glow);
+}
+
+.revisao-actions-grid #revisao-btn-errado {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.revisao-actions-grid #revisao-btn-errado:hover:not(:disabled) {
+    background: var(--danger);
+    color: white;
+    box-shadow: 0 0 15px var(--danger-glow);
+}
+
+/* Review final list */
+.revisao-review-item {
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid var(--border-standard);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: var(--transition);
+}
+
+.revisao-review-item.correct {
+    border-left: 4px solid var(--success);
+}
+
+.revisao-review-item.wrong {
+    border-left: 4px solid var(--danger);
+}
+
+.revisao-review-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.revisao-review-item-statement {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.revisao-review-item-statement b {
+    color: var(--accent);
+}
+
+.revisao-review-item-explanation {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border-standard);
+    line-height: 1.5;
+}
+
+/* Responsividade da Revisão */
+@media (max-width: 768px) {
+    .revisao-actions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+

@@ -54,8 +54,9 @@ function initTabs() {
     
     menuItems.forEach(item => {
         item.addEventListener("click", (e) => {
-            e.preventDefault();
             const tabId = item.getAttribute("data-tab");
+            if (!tabId) return; // Permite links comuns funcionarem (ex: simulados)
+            e.preventDefault();
             
             // Remove active de todos
             menuItems.forEach(m => m.classList.remove("active"));
@@ -77,6 +78,8 @@ function initTabs() {
                 renderEdital();
             } else if (tabId === "desempenho") {
                 renderDesempenho();
+            } else if (tabId === "revisao") {
+                initRevisaoTab();
             }
         });
     });
@@ -90,7 +93,8 @@ function updateHeaderTitle(tabId) {
         dashboard: { t: "Painel Tático", d: "Visão geral do seu progresso, metas e estatísticas de estudos." },
         cronograma: { t: "Cronograma de Estudos", d: "Planejamento diário inteligente de matérias e temas." },
         edital: { t: "Controle do Edital", d: "Mapeamento e acompanhamento de tópicos fechados do edital." },
-        desempenho: { t: "Desempenho Geral", d: "Evolução e registros de testes físicos do TAF e Simulados." }
+        desempenho: { t: "Desempenho Geral", d: "Evolução e registros de testes físicos do TAF e Simulados." },
+        revisao: { t: "Revisão Semanal", d: "Revise os temas de cada semana com questões personalizadas do banco de dados." }
     };
     
     if (titles[tabId]) {
@@ -129,6 +133,7 @@ async function loadData() {
     if (localData) {
         try {
             state = JSON.parse(localData);
+            if (!state.erros_questoes) state.erros_questoes = [];
             console.log("Dados carregados do localStorage.");
             appDataReady();
             return;
@@ -142,10 +147,11 @@ async function loadData() {
         const response = await fetch("pmma_data_export.json");
         if (response.ok) {
             state = await response.json();
+            if (!state.erros_questoes) state.erros_questoes = [];
             saveDataLocal();
-            console.log("Dados carregados do arquivo pmma_data_export_2.json.");
+            console.log("Dados carregados do arquivo pmma_data_export.json.");
         } else {
-            console.warn("Arquivo pmma_data_export_2.json não encontrado. Iniciando estado vazio.");
+            console.warn("Arquivo pmma_data_export.json não encontrado. Iniciando estado vazio.");
         }
     } catch (err) {
         console.error("Erro ao carregar dados do JSON:", err);
@@ -161,6 +167,8 @@ function appDataReady() {
     populateCronoFilterSemanas();
     populateEditalFilterSubjects();
     renderDashboard();
+    checkPendingSimulados();
+    window.addEventListener('focus', checkPendingSimulados);
 }
 
 // 🗓️ Obter Data de Hoje no formato DD/MM/YYYY
@@ -936,3 +944,789 @@ function formatDateInput(dateStr) {
     const parts = dateStr.split("-"); // YYYY-MM-DD
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
+
+// ==========================================================================
+// 📚 LÓGICA DA ABA DE REVISÃO SEMANAL & CADERNO DE ERROS (QG V2)
+// ==========================================================================
+
+let bancoQuestoes = [];
+let bancoQuestoesLoaded = false;
+let revisaoState = {
+    questions: [],
+    currentIndex: 0,
+    mode: "estudo",
+    answers: [],
+    timer: null,
+    seconds: 0,
+    paused: false,
+    selectedWeek: "",
+    selectedTopics: []
+};
+
+// Inicialização da aba de Revisão Semanal
+function initRevisaoTab() {
+    // 1. Mostrar a tela de configuração por padrão
+    showRevisaoScreen("setup");
+    
+    // 2. Verificar se há simulado pausado
+    checkPausedRevisao();
+
+    // 3. Configurar listeners dos botões de controle
+    document.getElementById("revisao-select-all-btn").onclick = () => toggleAllRevisaoCheckboxes(true);
+    document.getElementById("revisao-clear-all-btn").onclick = () => toggleAllRevisaoCheckboxes(false);
+    document.getElementById("revisao-start-btn").onclick = () => startRevisao(false);
+    document.getElementById("revisao-resume-btn").onclick = () => startRevisao(true);
+    document.getElementById("revisao-quiz-pause-btn").onclick = revisaoPauseAndSave;
+    document.getElementById("revisao-btn-certo").onclick = () => revisaoAnswer("c");
+    document.getElementById("revisao-btn-errado").onclick = () => revisaoAnswer("e");
+    document.getElementById("revisao-btn-next").onclick = revisaoNextQuestion;
+    document.getElementById("revisao-btn-abort").onclick = () => {
+        if (confirm("Deseja mesmo descartar os resultados deste simulado? Eles não serão salvos.")) {
+            showRevisaoScreen("setup");
+            checkPausedRevisao();
+        }
+    };
+    document.getElementById("revisao-btn-save-results").onclick = revisaoSaveResults;
+    
+    // 4. Configurar listener de mudança de semana
+    const weekSelect = document.getElementById("revisao-week-select");
+    weekSelect.onchange = (e) => {
+        populateRevisaoTopics(e.target.value);
+    };
+
+    // 5. Carregar banco de questões se ainda não foi carregado
+    if (!bancoQuestoesLoaded) {
+        loadBancoQuestoes();
+    } else {
+        populateRevisaoWeeks();
+    }
+}
+
+// Carregar o banco de questões de forma assíncrona
+async function loadBancoQuestoes() {
+    const container = document.getElementById("revisao-topics-container");
+    const originalHtml = container.innerHTML;
+    
+    container.innerHTML = `
+        <div style="text-align: center; padding: 2rem; color: var(--accent);">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+            <p>Carregando banco de dados de questões (7.008 itens)...</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch("banco_questoes.json");
+        if (response.ok) {
+            bancoQuestoes = await response.json();
+            bancoQuestoesLoaded = true;
+            console.log(`Carregado banco com ${bancoQuestoes.length} questões.`);
+            container.innerHTML = originalHtml;
+            populateRevisaoWeeks();
+        } else {
+            container.innerHTML = `<p style="color: var(--danger);">Erro ao carregar o banco de questões (JSON não encontrado).</p>`;
+        }
+    } catch (err) {
+        console.error("Erro ao carregar banco de questões:", err);
+        container.innerHTML = `<p style="color: var(--danger);">Erro na conexão ao carregar o banco de questões.</p>`;
+    }
+}
+
+// Preencher o select de semanas
+function populateRevisaoWeeks() {
+    const select = document.getElementById("revisao-week-select");
+    select.innerHTML = '<option value="">Selecione uma semana...</option>';
+    
+    // Extrai semanas únicas do cronograma
+    const weeks = [...new Set(state.crono.map(c => c.semana))].filter(Boolean);
+    
+    // Ordenar semanas numericamente
+    weeks.sort((a, b) => {
+        const numA = parseInt(a.replace(/\D/g, "")) || 0;
+        const numB = parseInt(b.replace(/\D/g, "")) || 0;
+        return numA - numB;
+    });
+    
+    weeks.forEach(w => {
+        const opt = document.createElement("option");
+        opt.value = w;
+        opt.textContent = w;
+        select.appendChild(opt);
+    });
+}
+
+// Preencher os tópicos da semana selecionada
+function populateRevisaoTopics(semana) {
+    const container = document.getElementById("revisao-topics-list");
+    const setupMsg = document.getElementById("revisao-topics-container").querySelector("p");
+    
+    if (!semana) {
+        container.innerHTML = "";
+        if (setupMsg) setupMsg.style.display = "block";
+        return;
+    }
+    
+    if (setupMsg) setupMsg.style.display = "none";
+    container.innerHTML = "";
+    
+    // Extrai os tópicos agendados para a semana selecionada no cronograma
+    const weekItems = state.crono.filter(c => c.semana === semana && c.subject !== "TAF (Físico)" && c.subject !== "DESCANSO" && c.subject !== "REVISÃO SEMANAL");
+    
+    if (weekItems.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem;">Nenhum tema de estudo agendado para esta semana.</p>`;
+        return;
+    }
+    
+    // Remove duplicatas de matérias/tópicos na semana
+    const uniqueTopics = [];
+    const seen = new Set();
+    weekItems.forEach(item => {
+        const key = `${item.subject}|||${item.topic}`;
+        if (!seen.has(key)) {
+            seen.add(key);
+            uniqueTopics.push({ subject: item.subject, topic: item.topic });
+        }
+    });
+
+    // Helpers de normalização para o contador de questões
+    const cleanText = (text) => {
+        if (!text) return "";
+        return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    };
+
+    const getKeywords = (text) => {
+        const cleaned = cleanText(text);
+        const words = cleaned.match(/[a-z0-9]{3,}/g) || [];
+        const stops = new Set(["para", "como", "mais", "seus", "suas", "pela", "pelo", "esse", "essa", "esta", "este", "sobre", "uma", "com", "dos", "das"]);
+        return words.filter(w => !stops.has(w));
+    };
+
+    // Renderiza a lista de tópicos com checkboxes e badges de contagem de questões
+    uniqueTopics.forEach((t, i) => {
+        // Conta quantas questões existem no banco para este tema específico usando keyword overlap
+        let count = 0;
+        if (bancoQuestoesLoaded) {
+            const tSubjClean = cleanText(t.subject);
+            const tKeywords = getKeywords(t.topic);
+            
+            count = bancoQuestoes.filter(q => {
+                const qSubj = cleanText(q.subject);
+                let subjectMatches = qSubj === tSubjClean;
+                // Remapeia se for informática/legislação
+                if ((tSubjClean.includes("legisla") || tSubjClean.includes("informa")) && qSubj === "legislacao institucional") {
+                    subjectMatches = true;
+                }
+                if ((tSubjClean.includes("legisla") || tSubjClean.includes("informa")) && qSubj === "noções de informática") {
+                    subjectMatches = true;
+                }
+                
+                if (subjectMatches) {
+                    const qTextClean = cleanText(q.statement + " " + (q.topic || ""));
+                    const qWords = new Set(qTextClean.match(/[a-z0-9]{3,}/g) || []);
+                    const overlap = tKeywords.filter(w => qWords.has(w));
+                    return overlap.length >= 1;
+                }
+                return false;
+            }).length;
+        }
+
+        const itemEl = document.createElement("div");
+        itemEl.className = "revisao-checklist-item";
+        itemEl.innerHTML = `
+            <input type="checkbox" id="topic-chk-${i}" data-subject="${t.subject}" data-topic="${t.topic}" checked>
+            <div class="revisao-checklist-item-details" onclick="document.getElementById('topic-chk-${i}').click(); event.stopPropagation();">
+                <span class="revisao-checklist-item-title">${t.topic}</span>
+                <span class="revisao-checklist-item-subject">${t.subject}</span>
+            </div>
+            <span class="revisao-checklist-item-badge">${count} Qs</span>
+        `;
+        
+        // Listener para evitar que o clique no checkbox cause dupla ação se clicado no elemento pai
+        itemEl.querySelector('input').onclick = (e) => e.stopPropagation();
+        
+        container.appendChild(itemEl);
+    });
+}
+
+// Alternar todos os tópicos
+function toggleAllRevisaoCheckboxes(checked) {
+    const list = document.getElementById("revisao-topics-list");
+    const checkboxes = list.querySelectorAll("input[type='checkbox']");
+    checkboxes.forEach(chk => chk.checked = checked);
+}
+
+// Verificar se há revisão pausada localmente
+function checkPausedRevisao() {
+    const paused = localStorage.getItem("pmma_paused_revisao");
+    const card = document.getElementById("revisao-resume-card");
+    
+    if (paused) {
+        try {
+            const data = JSON.parse(paused);
+            document.getElementById("revisao-resume-info").textContent = `Você possui uma revisão pausada de ${data.questions.length} questões (${data.currentIndex + 1}ª questão, com ${Math.floor(data.seconds / 60)}m ${data.seconds % 60}s).`;
+            card.style.display = "block";
+        } catch (e) {
+            localStorage.removeItem("pmma_paused_revisao");
+            card.style.display = "none";
+        }
+    } else {
+        card.style.display = "none";
+    }
+}
+
+// Alternar telas de revisão
+function showRevisaoScreen(screen) {
+    document.querySelectorAll(".revisao-screen").forEach(s => s.style.display = "none");
+    document.getElementById(`revisao-${screen}-screen`).style.display = "block";
+}
+
+// Iniciar ou retomar a revisão
+function startRevisao(resumeFromPaused) {
+    if (resumeFromPaused) {
+        const pausedData = localStorage.getItem("pmma_paused_revisao");
+        if (pausedData) {
+            try {
+                revisaoState = JSON.parse(pausedData);
+                revisaoState.paused = false;
+                showRevisaoScreen("quiz");
+                renderRevisaoQuestion();
+                revisaoStartTimer();
+                return;
+            } catch (e) {
+                console.error("Erro ao carregar dados pausados:", e);
+                localStorage.removeItem("pmma_paused_revisao");
+            }
+        }
+    }
+    
+    // Novo Simulado
+    const selectedWeek = document.getElementById("revisao-week-select").value;
+    if (!selectedWeek) {
+        alert("Por favor, selecione uma semana do cronograma.");
+        return;
+    }
+    
+    const checkboxes = document.getElementById("revisao-topics-list").querySelectorAll("input[type='checkbox']:checked");
+    if (checkboxes.length === 0) {
+        alert("Por favor, marque pelo menos um tema para revisão.");
+        return;
+    }
+    
+    const selectedTopics = [];
+    checkboxes.forEach(chk => {
+        selectedTopics.push({
+            subject: chk.getAttribute("data-subject"),
+            topic: chk.getAttribute("data-topic")
+        });
+    });
+    
+    // Helpers de normalização e filtragem
+    const cleanText = (text) => {
+        if (!text) return "";
+        return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    };
+
+    const getKeywords = (text) => {
+        const cleaned = cleanText(text);
+        const words = cleaned.match(/[a-z0-9]{3,}/g) || [];
+        const stops = new Set(["para", "como", "mais", "seus", "suas", "pela", "pelo", "esse", "essa", "esta", "este", "sobre", "uma", "com", "dos", "das"]);
+        return words.filter(w => !stops.has(w));
+    };
+
+    // Filtrar questões correspondentes
+    let pool = bancoQuestoes;
+    
+    // 1. Filtrar pelos tópicos selecionados
+    pool = pool.filter(q => {
+        const qSubj = cleanText(q.subject);
+        const qTextClean = cleanText(q.statement + " " + (q.topic || ""));
+        const qWords = new Set(qTextClean.match(/[a-z0-9]{3,}/g) || []);
+        
+        return selectedTopics.some(t => {
+            const tSubjClean = cleanText(t.subject);
+            let subjectMatches = qSubj === tSubjClean;
+            // Remapeia se for informática/legislação
+            if ((tSubjClean.includes("legisla") || tSubjClean.includes("informa")) && qSubj === "legislacao institucional") {
+                subjectMatches = true;
+            }
+            if ((tSubjClean.includes("legisla") || tSubjClean.includes("informa")) && qSubj === "noções de informática") {
+                subjectMatches = true;
+            }
+            
+            if (subjectMatches) {
+                const tKeywords = getKeywords(t.topic);
+                const overlap = tKeywords.filter(w => qWords.has(w));
+                return overlap.length >= 1;
+            }
+            return false;
+        });
+    });
+    
+    // 2. Filtro Cebraspe (Procura por CESPE, CEBRASPE ou questões de ID Q-LEG)
+    const cebraspeOnly = document.getElementById("revisao-cebraspe-only").checked;
+    if (cebraspeOnly) {
+        pool = pool.filter(q => {
+            const isLeg = q.id.startsWith("Q-LEG");
+            const isCespeInfo = q.info && (q.info.toUpperCase().includes("CESPE") || q.info.toUpperCase().includes("CEBRASPE"));
+            const isCespeComment = q.comment && (q.comment.toUpperCase().includes("CESPE") || q.comment.toUpperCase().includes("CEBRASPE"));
+            return isLeg || isCespeInfo || isCespeComment;
+        });
+    }
+    
+    // 3. Filtro Caderno de Erros (Apenas questões erradas anteriormente)
+    const errorsOnly = document.getElementById("revisao-errors-only").checked;
+    if (errorsOnly) {
+        const errIds = new Set(state.erros_questoes || []);
+        pool = pool.filter(q => errIds.has(q.id));
+    }
+    
+    if (pool.length === 0) {
+        alert("Nenhuma questão foi encontrada no banco com os filtros selecionados. Tente selecionar mais temas ou desmarcar a opção 'Apenas CEBRASPE' / 'Focar em Questões Erradas'.");
+        return;
+    }
+    
+    // 4. Limitar quantidade de questões
+    let limitVal = document.getElementById("revisao-limit-select").value;
+    let limit = limitVal === "all" ? pool.length : parseInt(limitVal);
+    
+    // Embaralhar o pool
+    const shuffled = pool.sort(() => 0.5 - Math.random());
+    const finalQuestions = shuffled.slice(0, limit);
+    
+    // Configurar estado
+    revisaoState = {
+        questions: finalQuestions,
+        currentIndex: 0,
+        mode: document.getElementById("revisao-mode-select").value,
+        answers: new Array(finalQuestions.length).fill(null),
+        timer: null,
+        seconds: 0,
+        paused: false,
+        selectedWeek: selectedWeek,
+        selectedTopics: selectedTopics
+    };
+    
+    // Ir para tela de execução
+    showRevisaoScreen("quiz");
+    renderRevisaoQuestion();
+    revisaoStartTimer();
+}
+
+// Iniciar cronômetro do quiz
+function revisaoStartTimer() {
+    if (revisaoState.timer) clearInterval(revisaoState.timer);
+    
+    const timerEl = document.getElementById("revisao-quiz-timer");
+    revisaoState.timer = setInterval(() => {
+        if (!revisaoState.paused) {
+            revisaoState.seconds++;
+            const mins = String(Math.floor(revisaoState.seconds / 60)).padStart(2, '0');
+            const secs = String(revisaoState.seconds % 60).padStart(2, '0');
+            timerEl.textContent = `${mins}:${secs}`;
+        }
+    }, 1000);
+}
+
+// Renderizar questão atual no quiz
+function renderRevisaoQuestion() {
+    const q = revisaoState.questions[revisaoState.currentIndex];
+    
+    // Atualizar indicador de progresso
+    document.getElementById("revisao-quiz-progress").textContent = `Questão ${revisaoState.currentIndex + 1} de ${revisaoState.questions.length}`;
+    
+    // Ocultar metadados e gabarito comentados
+    document.getElementById("revisao-quiz-meta").style.display = "none";
+    document.getElementById("revisao-quiz-feedback").style.display = "none";
+    document.getElementById("revisao-quiz-nav").style.display = "none";
+    
+    // Habilitar botões Certo/Errado
+    document.getElementById("revisao-quiz-actions").style.display = "grid";
+    document.getElementById("revisao-btn-certo").disabled = false;
+    document.getElementById("revisao-btn-errado").disabled = false;
+    
+    // Atualizar matéria no topo
+    document.getElementById("revisao-quiz-subject-header").textContent = q.subject;
+    
+    // Renderizar Texto associado se houver (procura por "Texto para" ou delimitadores)
+    const textAssociatedBox = document.getElementById("revisao-quiz-text-associated");
+    
+    // Algumas questões têm enunciados complexos. Se encontrarmos tags de imagem ou quebras de texto que indicam texto base, organizamos
+    let stmt = q.statement;
+    let textAssociated = "";
+    
+    // Se o enunciado contiver uma situação hipotética identificada
+    if (stmt.toLowerCase().includes("situação hipotética:")) {
+        const parts = stmt.split(/situação hipotética:/i);
+        textAssociated = `<strong>Situação Hipotética:</strong> ${parts[1].split(/assertiva:|assertivas:|julgue o item:|acerca desse assunto/i)[0].trim()}`;
+        
+        // Reconstrói a assertiva
+        const assertivaParts = stmt.split(/assertiva:|assertivas:|julgue o item:/i);
+        stmt = assertivaParts.length > 1 ? `<strong>Assertiva:</strong> ${assertivaParts[1].trim()}` : stmt;
+    }
+    
+    if (textAssociated) {
+        textAssociatedBox.innerHTML = textAssociated;
+        textAssociatedBox.style.display = "block";
+    } else {
+        textAssociatedBox.style.display = "none";
+    }
+    
+    // Renderizar o enunciado
+    document.getElementById("revisao-quiz-statement").innerHTML = stmt;
+    
+    // Se já respondeu (caso de retomada ou navegação)
+    const savedAnswer = revisaoState.answers[revisaoState.currentIndex];
+    if (savedAnswer) {
+        showRevisaoFeedback(savedAnswer.choice);
+    }
+}
+
+// Processar a resposta do usuário
+function revisaoAnswer(userChoice) {
+    const q = revisaoState.questions[revisaoState.currentIndex];
+    const isCorrect = userChoice === q.answer;
+    
+    const ansRecord = {
+        choice: userChoice,
+        ok: isCorrect
+    };
+    
+    revisaoState.answers[revisaoState.currentIndex] = ansRecord;
+    
+    // Gerenciador do Caderno de Erros baseado nos IDs das questões
+    if (!isCorrect) {
+        // Adiciona à lista de erros se já não estiver lá
+        if (!state.erros_questoes.includes(q.id)) {
+            state.erros_questoes.push(q.id);
+        }
+    } else {
+        // Remove da lista de erros ao acertar
+        state.erros_questoes = state.erros_questoes.filter(id => id !== q.id);
+    }
+    saveDataLocal(); // Salva estado de erros do usuário
+    
+    // Desabilitar botões
+    document.getElementById("revisao-btn-certo").disabled = true;
+    document.getElementById("revisao-btn-errado").disabled = true;
+    
+    if (revisaoState.mode === "estudo") {
+        showRevisaoFeedback(userChoice);
+    } else {
+        // No Modo Simulado: avança automaticamente ou finaliza sem dar pistas
+        setTimeout(() => {
+            revisaoNextQuestion();
+        }, 300);
+    }
+}
+
+// Exibir o feedback no Modo Estudo
+function showRevisaoFeedback(userChoice) {
+    const q = revisaoState.questions[revisaoState.currentIndex];
+    const isCorrect = userChoice === q.answer;
+    
+    // Preencher metadados revelados
+    const metaContainer = document.getElementById("revisao-quiz-meta");
+    metaContainer.innerHTML = `
+        <span class="revisao-meta-tag accent"><i class="fa-solid fa-tag"></i> ${q.topic || 'Geral'}</span>
+        ${q.document ? `<span class="revisao-meta-tag"><i class="fa-solid fa-file-lines"></i> ${q.document}</span>` : ''}
+        ${q.info ? `<span class="revisao-meta-tag"><i class="fa-solid fa-building"></i> ${q.info}</span>` : ''}
+    `;
+    metaContainer.style.display = "flex";
+    
+    // Configurar card de feedback
+    const feedbackPanel = document.getElementById("revisao-quiz-feedback");
+    const statusEl = document.getElementById("revisao-feedback-status");
+    const answerEl = document.getElementById("revisao-feedback-answer");
+    const commentEl = document.getElementById("revisao-feedback-comment");
+    const trapBox = document.getElementById("revisao-feedback-trap");
+    const trapTextEl = document.getElementById("revisao-feedback-trap-text");
+    
+    feedbackPanel.className = "revisao-feedback-panel " + (isCorrect ? "correct" : "wrong");
+    statusEl.innerHTML = isCorrect ? '✅ Você Acertou! <i class="fa-solid fa-circle-check"></i>' : '❌ Você Errou! <i class="fa-solid fa-circle-xmark"></i>';
+    answerEl.textContent = q.answer === "c" ? "Certo" : "Errado";
+    commentEl.innerHTML = q.comment || "Sem comentários adicionais cadastrados.";
+    
+    // Lógica para detectar pegadinhas de forma inteligente no comentário
+    const keywordsTrap = ["cuidado", "pegadinha", "atencao", "alerta", "restr", "unico", "exclusiv", "sempre", "nunca", "apenas"];
+    const normalizedComment = commentEl.textContent.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    
+    let isTrapDetected = keywordsTrap.some(kw => normalizedComment.includes(kw));
+    
+    if (isTrapDetected) {
+        let sentenceTrap = "Cuidado com termos restritivos (único, exclusivamente, apenas) ou negações. A banca costuma usá-los para invalidar assertivas.";
+        
+        // Tenta isolar a frase específica do comentário que fala sobre cuidado/pegadinha
+        const sentences = q.comment.split(/[.!?]/);
+        const matchSentence = sentences.find(s => {
+            const normalizedSentence = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            return keywordsTrap.some(kw => normalizedSentence.includes(kw));
+        });
+        
+        if (matchSentence && matchSentence.trim().length > 10) {
+            sentenceTrap = matchSentence.trim() + ".";
+        }
+        
+        trapTextEl.textContent = sentenceTrap;
+        trapBox.style.display = "block";
+    } else {
+        trapBox.style.display = "none";
+    }
+    
+    feedbackPanel.style.display = "block";
+    
+    // Ocultar botões Certo/Errado e mostrar Avançar
+    document.getElementById("revisao-quiz-actions").style.display = "none";
+    document.getElementById("revisao-quiz-nav").style.display = "flex";
+}
+
+// Avançar ou terminar o quiz
+function revisaoNextQuestion() {
+    if (revisaoState.currentIndex < revisaoState.questions.length - 1) {
+        revisaoState.currentIndex++;
+        
+        // Salvar estado intermediário da revisão para retomar depois
+        localStorage.setItem("pmma_paused_revisao", JSON.stringify(revisaoState));
+        
+        renderRevisaoQuestion();
+    } else {
+        revisaoShowResults();
+    }
+}
+
+// Pausar e Salvar estado no localStorage
+function revisaoPauseAndSave() {
+    if (revisaoState.timer) clearInterval(revisaoState.timer);
+    revisaoState.paused = true;
+    
+    localStorage.setItem("pmma_paused_revisao", JSON.stringify(revisaoState));
+    
+    alert("Simulado de revisão pausado com sucesso! Você poderá retomá-lo a qualquer momento nesta aba.");
+    showRevisaoScreen("setup");
+    checkPausedRevisao();
+}
+
+// Exibir tela de resultados
+function revisaoShowResults() {
+    if (revisaoState.timer) clearInterval(revisaoState.timer);
+    
+    // Remove o estado de pausa porque foi concluído
+    localStorage.removeItem("pmma_paused_revisao");
+    
+    showRevisaoScreen("result");
+    
+    // Cálculos
+    const total = revisaoState.questions.length;
+    const correct = revisaoState.answers.filter(ans => ans && ans.ok).length;
+    const accuracy = total > 0 ? (correct / total) * 100 : 0;
+    
+    const mins = String(Math.floor(revisaoState.seconds / 60)).padStart(2, '0');
+    const secs = String(revisaoState.seconds % 60).padStart(2, '0');
+    const timeStr = `${mins}:${secs}`;
+    
+    // Atualizar HTML
+    document.getElementById("revisao-res-total").textContent = total;
+    document.getElementById("revisao-res-correct").textContent = correct;
+    document.getElementById("revisao-res-accuracy").textContent = `${accuracy.toFixed(1)}%`;
+    document.getElementById("revisao-res-time").textContent = timeStr;
+    
+    // Configurações de checkbox padrão
+    document.getElementById("revisao-save-crono").checked = true;
+    document.getElementById("revisao-save-simulado").checked = accuracy >= 50; // Recomenda salvar no histórico se obteve nota razoável
+    
+    // Renderizar revisão de questões de prova detalhada
+    const reviewList = document.getElementById("revisao-review-list");
+    reviewList.innerHTML = "";
+    
+    revisaoState.questions.forEach((q, idx) => {
+        const ans = revisaoState.answers[idx];
+        const isCorrect = ans && ans.ok;
+        
+        const reviewItem = document.createElement("div");
+        reviewItem.className = `revisao-review-item ${isCorrect ? 'correct' : 'wrong'}`;
+        
+        // Verifica se há pegadinha
+        const keywordsTrap = ["cuidado", "pegadinha", "atencao", "alerta", "restr", "unico", "exclusiv", "sempre", "nunca", "apenas"];
+        const normalizedComment = (q.comment || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        let isTrapDetected = keywordsTrap.some(kw => normalizedComment.includes(kw));
+        
+        reviewItem.innerHTML = `
+            <div class="revisao-review-item-header">
+                <span>Matéria: ${q.subject} · Assunto: ${q.topic || 'Geral'}</span>
+                <span style="font-weight: 700; color: ${isCorrect ? 'var(--success)' : 'var(--danger)'}">
+                    ${isCorrect ? 'Acertou' : 'Errou'} (Sua resposta: ${ans ? (ans.choice === 'c' ? 'Certo' : 'Errado') : 'Sem resposta'})
+                </span>
+            </div>
+            <div class="revisao-review-item-statement">
+                ${q.statement}
+            </div>
+            <div class="revisao-review-item-explanation">
+                <strong>Gabarito Oficial:</strong> <span style="text-transform: uppercase; font-weight: 700;">${q.answer === 'c' ? 'Certo' : 'Errado'}</span><br>
+                <strong>Comentário:</strong> ${q.comment || 'Sem comentários.'}
+                
+                ${isTrapDetected ? `
+                    <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(245, 158, 11, 0.05); border-left: 2px solid var(--warning); border-radius: 4px; color: #FFE08A; font-size: 0.85rem;">
+                        <strong>⚠️ Atenção à Pegadinha Cebraspe presente neste tema!</strong>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        reviewList.appendChild(reviewItem);
+    });
+}
+
+// Gravar resultados e atualizar estatísticas
+function revisaoSaveResults() {
+    const total = revisaoState.questions.length;
+    const correct = revisaoState.answers.filter(ans => ans && ans.ok).length;
+    const accuracy = total > 0 ? (correct / total) * 100 : 0;
+    
+    const saveCrono = document.getElementById("revisao-save-crono").checked;
+    const saveSimulado = document.getElementById("revisao-save-simulado").checked;
+    
+    // 1. Gravar progresso de estudos no Cronograma
+    if (saveCrono) {
+        // Encontra os temas correspondentes no cronograma e atualiza
+        revisaoState.selectedTopics.forEach(t => {
+            state.crono.forEach(c => {
+                if (c.semana === revisaoState.selectedWeek && c.subject === t.subject && c.topic === t.topic) {
+                    c.studied = true;
+                    // Divide o tempo total e os acertos de forma proporcional/acumulada
+                    const minutesFraction = Math.max(1, Math.round((revisaoState.seconds / 60) / revisaoState.selectedTopics.length));
+                    const questionsFraction = Math.max(1, Math.round(total / revisaoState.selectedTopics.length));
+                    const correctFraction = Math.round(correct / revisaoState.selectedTopics.length);
+                    
+                    c.duration = (c.duration || 0) + minutesFraction;
+                    c.questions = (c.questions || 0) + questionsFraction;
+                    c.correct = (c.correct || 0) + correctFraction;
+                    c.accuracy = c.questions > 0 ? (c.correct / c.questions) : 0;
+                }
+            });
+        });
+    }
+    
+    // 2. Gravar no Histórico de Simulados
+    if (saveSimulado) {
+        const simNum = state.simulados.length + 1;
+        const mins = String(Math.floor(revisaoState.seconds / 60)).padStart(2, '0');
+        const secs = String(revisaoState.seconds % 60).padStart(2, '0');
+        
+        const newSim = {
+            number: simNum,
+            date: getTodayString(),
+            p1_questions: total,
+            p1_correct: correct,
+            p2_questions: 0,
+            p2_correct: 0,
+            score: correct - (total - correct), // Pontuação líquida (padrão Cebraspe)
+            duration: `00:${mins}:${secs}`,
+            notes: `Revisão Semanal (${revisaoState.selectedWeek})`
+        };
+        state.simulados.push(newSim);
+    }
+    
+    // 3. Persistir dados localmente
+    saveDataLocal();
+    
+    // 4. Re-sinalizar sucesso e voltar para setup
+    alert("Resultados salvos e estatísticas de estudo atualizadas com sucesso!");
+    
+    showRevisaoScreen("setup");
+    checkPausedRevisao();
+    
+    // Atualizar dados de interface gerais
+    renderDashboard();
+}
+
+// Sincronização em background de simulados finalizados em abas externas
+function checkPendingSimulados() {
+    const pendingData = localStorage.getItem("pmma_pending_simulado_results");
+    if (pendingData) {
+        try {
+            const results = JSON.parse(pendingData);
+            if (results && results.length > 0) {
+                // Efeito visual no rodapé - sincronizando
+                const syncStatus = document.getElementById("sync-status");
+                const syncText = document.getElementById("sync-text");
+                const syncIcon = syncStatus?.querySelector("i");
+                
+                if (syncStatus) {
+                    syncStatus.className = "sync-badge synching";
+                    if (syncText) syncText.textContent = "Sincronizando Simulados...";
+                    if (syncIcon) syncIcon.className = "fa-solid fa-rotate fa-spin";
+                }
+                
+                // Processar cada simulado finalizado
+                results.forEach(res => {
+                    const simNum = state.simulados.length + 1;
+                    const newSim = {
+                        number: simNum,
+                        date: res.date,
+                        p1_questions: res.answered,
+                        p1_correct: res.correct,
+                        p2_questions: 0,
+                        p2_correct: 0,
+                        score: res.score,
+                        duration: res.duration.startsWith("00:") ? res.duration : `00:${res.duration}`,
+                        notes: `Simulado: ${res.name.split("-")[1]?.trim() || res.name}`
+                    };
+                    
+                    // Impedir duplicados idênticos em timestamps muito próximos
+                    const isDup = state.simulados.some(s => s.date === newSim.date && s.notes === newSim.notes && s.score === newSim.score);
+                    if (!isDup) {
+                        state.simulados.push(newSim);
+                        
+                        // Atualizar estatísticas da matéria no cronograma
+                        const subjectName = "Legislação Institucional";
+                        let searchStr = "";
+                        if (res.name.toLowerCase().includes("estatuto")) {
+                            searchStr = "Estatuto";
+                        } else if (res.name.toLowerCase().includes("lob") || res.name.toLowerCase().includes("12896")) {
+                            searchStr = "LOB";
+                        } else if (res.name.toLowerCase().includes("14751") || res.name.toLowerCase().includes("orgânica")) {
+                            searchStr = "Orgânica";
+                        }
+                        
+                        if (searchStr) {
+                            state.crono.forEach(c => {
+                                if (c.subject === subjectName && c.topic.toLowerCase().includes(searchStr.toLowerCase())) {
+                                    c.studied = true;
+                                    c.questions = (c.questions || 0) + res.answered;
+                                    c.correct = (c.correct || 0) + res.correct;
+                                    c.accuracy = c.questions > 0 ? (c.correct / c.questions) : 0;
+                                }
+                            });
+                        }
+                    }
+                });
+                
+                // Salvar estado
+                saveDataLocal();
+                
+                // Limpar fila
+                localStorage.removeItem("pmma_pending_simulado_results");
+                
+                // Finalizar animação e alterar para sincronizado
+                setTimeout(() => {
+                    if (syncStatus) {
+                        syncStatus.className = "sync-badge synced";
+                        if (syncText) syncText.textContent = "Dados Sincronizados";
+                        if (syncIcon) syncIcon.className = "fa-solid fa-circle-check";
+                        
+                        // Reverter para o padrão após 3 segundos
+                        setTimeout(() => {
+                            if (syncText) syncText.textContent = "Plano Ativo (V2)";
+                            if (syncIcon) syncIcon.className = "fa-solid fa-file-invoice";
+                        }, 3000);
+                    }
+                }, 1500);
+                
+                // Recarregar os dashboards/gráficos se o usuário estiver nas telas correspondentes
+                const activeTab = document.querySelector(".menu-item.active")?.getAttribute("data-tab");
+                if (activeTab === "dashboard") renderDashboard();
+                else if (activeTab === "desempenho") renderDesempenho();
+            }
+        } catch (e) {
+            console.error("Erro ao sincronizar simulados pendentes:", e);
+        }
+    }
+}
+
