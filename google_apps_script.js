@@ -42,6 +42,8 @@ function doPost(e) {
     return handleDeleteHistoryItem(data);
   } else if (action === 'editHistoryItem') {
     return handleEditHistoryItem(data);
+  } else if (action === 'syncErrors') {
+    return handleSyncErrors(data);
   }
   
   return createResponse({ status: 'error', message: 'Ação POST desconhecida.' });
@@ -50,8 +52,14 @@ function doPost(e) {
 function handleGetData() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheets = ['Cronograma', 'Cronograma de Estudos', 'Controle do Edital', 'Registro de Estudos', 'Simulados Cabecalho', 'Simulados Detalhes', 'Treino do TAF', 'Simulados do TAF'];
+    var sheets = ['Cronograma', 'Cronograma de Estudos', 'Controle do Edital', 'Registro de Estudos', 'Simulados Cabecalho', 'Simulados Detalhes', 'Treino do TAF', 'Simulados do TAF', 'Caderno de Erros'];
     var result = {};
+    
+    // Auto-cria a aba Caderno de Erros se ela não existir
+    if (!ss.getSheetByName('Caderno de Erros')) {
+      var errSheet = ss.insertSheet('Caderno de Erros');
+      errSheet.appendRow(['ID da Questão', 'Data de Registro']);
+    }
     
     sheets.forEach(function(sheetName) {
       var sheet = ss.getSheetByName(sheetName);
@@ -67,6 +75,32 @@ function handleGetData() {
     }
     
     return createResponse({ status: 'success', data: result });
+  } catch (e) {
+    return createResponse({ status: 'error', message: e.toString() });
+  }
+}
+
+function handleSyncErrors(data) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('Caderno de Erros');
+    if (!sheet) {
+      sheet = ss.insertSheet('Caderno de Erros');
+    }
+    
+    // Limpa a planilha e insere o cabeçalho
+    sheet.clear();
+    sheet.appendRow(['ID da Questão', 'Data de Registro']);
+    
+    // Insere cada ID de erro
+    if (data.errors && data.errors.length > 0) {
+      var dateStr = new Date().toLocaleDateString('pt-BR');
+      data.errors.forEach(function(id) {
+        sheet.appendRow([id, dateStr]);
+      });
+    }
+    
+    return createResponse({ status: 'success', message: 'Caderno de erros sincronizado com sucesso!' });
   } catch (e) {
     return createResponse({ status: 'error', message: e.toString() });
   }

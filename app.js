@@ -161,6 +161,7 @@ async function loadData() {
 
 function saveDataLocal() {
     localStorage.setItem("pmma_data_v2", JSON.stringify(state));
+    pushErrorsToSheets();
 }
 
 function appDataReady() {
@@ -169,6 +170,17 @@ function appDataReady() {
     renderDashboard();
     checkPendingSimulados();
     window.addEventListener('focus', checkPendingSimulados);
+    
+    // Configura os listeners do modal da Planilha
+    initSheetsConfigListeners();
+    
+    // Tenta sincronização na inicialização e foco
+    if (SHEET_WEBAPP_URL) {
+        syncDataOnline();
+        window.addEventListener('focus', syncDataOnline);
+    } else {
+        updateSyncText("Modo Local (Offline)", "offline");
+    }
 }
 
 // 🗓️ Obter Data de Hoje no formato DD/MM/YYYY
@@ -866,6 +878,39 @@ function handleStudyFormSubmit(e) {
         });
     }
     
+    // Sincronização online
+    if (SHEET_WEBAPP_URL) {
+        const item = source === "crono" ? state.crono[index] : state.edital[index];
+        if (source === "crono") {
+            postToSheets("updateCrono", {
+                semana: item.semana,
+                day: item.day,
+                subject: item.subject,
+                topic: item.topic,
+                studied: completed,
+                duration: duration,
+                questions: questions,
+                correct: correct
+            });
+        }
+        postToSheets("toggleEdital", {
+            subject: item.subject,
+            topic: item.topic,
+            studied: completed
+        });
+        postToSheets("addStudy", {
+            date: getTodayString(),
+            subject: item.subject,
+            topic: item.topic,
+            type: "Estudo",
+            duration: duration,
+            questions: questions,
+            correct: correct,
+            errors: Math.max(0, questions - correct),
+            notes: notes
+        });
+    }
+    
     saveDataLocal();
     closeModal("modal-log-study");
     
@@ -894,6 +939,21 @@ function handleSimuladoFormSubmit(e) {
     // Evitar número duplicado de simulado
     state.simulados = state.simulados.filter(s => s.number !== newSim.number);
     state.simulados.push(newSim);
+    
+    // Sincronização online
+    if (SHEET_WEBAPP_URL) {
+        postToSheets("addSimulado", {
+            number: newSim.number,
+            date: newSim.date,
+            p1_questions: newSim.p1_questions,
+            p1_correct: newSim.p1_correct,
+            p2_questions: newSim.p2_questions,
+            p2_correct: newSim.p2_correct,
+            score: newSim.score,
+            duration: newSim.duration,
+            notes: newSim.notes
+        });
+    }
     
     saveDataLocal();
     closeModal("modal-log-simulado");
@@ -928,6 +988,17 @@ function handleTafFormSubmit(e) {
     // Evitar data duplicada
     state.taf_semanal = state.taf_semanal.filter(t => t.date !== newTaf.date);
     state.taf_semanal.push(newTaf);
+    
+    // Sincronização online
+    if (SHEET_WEBAPP_URL) {
+        postToSheets("addTAF", {
+            date: newTaf.date,
+            pullups: newTaf.pullups,
+            meio_sugado: newTaf.meio_sugado,
+            abdominal: newTaf.abdominal,
+            running: newTaf.running
+        });
+    }
     
     saveDataLocal();
     closeModal("modal-log-taf");
@@ -1727,6 +1798,227 @@ function checkPendingSimulados() {
         } catch (e) {
             console.error("Erro ao sincronizar simulados pendentes:", e);
         }
+    }
+}
+
+// ==========================================================================
+// ☁️ INTEGRAÇÃO ONLINE COM GOOGLE SHEETS (SINC AUTOMÁTICA PC/CELULAR)
+// ==========================================================================
+
+let SHEET_WEBAPP_URL = localStorage.getItem("pmma_webapp_url") || "";
+
+function initSheetsConfigListeners() {
+    const gearBtn = document.getElementById("btn-config-sheets");
+    const modal = document.getElementById("modal-config-sheets");
+    const closeBtn = document.getElementById("close-modal-sheets");
+    const cancelBtn = document.getElementById("btn-cancel-sheets");
+    const form = document.getElementById("form-config-sheets");
+    const urlInput = document.getElementById("sheets-webapp-url");
+
+    if (gearBtn) {
+        gearBtn.onclick = () => {
+            urlInput.value = SHEET_WEBAPP_URL;
+            modal.style.display = "block";
+        };
+    }
+
+    const closeConfig = () => {
+        modal.style.display = "none";
+    };
+
+    if (closeBtn) closeBtn.onclick = closeConfig;
+    if (cancelBtn) cancelBtn.onclick = closeConfig;
+
+    if (form) {
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const newUrl = urlInput.value.trim();
+            localStorage.setItem("pmma_webapp_url", newUrl);
+            SHEET_WEBAPP_URL = newUrl;
+            
+            closeConfig();
+            
+            if (SHEET_WEBAPP_URL) {
+                // Adiciona listeners para foco
+                window.removeEventListener('focus', syncDataOnline);
+                window.addEventListener('focus', syncDataOnline);
+                syncDataOnline();
+            } else {
+                updateSyncText("Modo Local (Offline)", "offline");
+                window.removeEventListener('focus', syncDataOnline);
+            }
+        };
+    }
+}
+
+async function syncDataOnline() {
+    if (!SHEET_WEBAPP_URL) {
+        updateSyncText("Modo Local (Offline)", "offline");
+        return;
+    }
+    
+    updateSyncText("Sincronizando...", "synching");
+    
+    try {
+        const response = await fetch(`${SHEET_WEBAPP_URL}?action=getData`);
+        if (!response.ok) throw new Error("Erro de conexão com o Apps Script");
+        const res = await response.json();
+        
+        if (res.status === "success") {
+            const data = res.data;
+            
+            // 1. Cronograma
+            if (data['Cronograma']) {
+                state.crono = data['Cronograma'].slice(1).map(row => ({
+                    semana: String(row[0]),
+                    day: String(row[1]),
+                    subject: String(row[2]),
+                    topic: String(row[3]),
+                    studied: row[4] === "Sim" || row[4] === true || row[4] === "TRUE",
+                    duration: parseInt(row[5]) || 0,
+                    questions: parseInt(row[6]) || 0,
+                    correct: parseInt(row[7]) || 0,
+                    accuracy: parseFloat(row[8]) || 0.0,
+                    notes: String(row[9] || "")
+                }));
+            }
+            
+            // 2. Edital
+            if (data['Controle do Edital']) {
+                state.edital = data['Controle do Edital'].slice(1).map(row => ({
+                    subject: String(row[0]),
+                    topic: String(row[1]),
+                    studied: row[2] === "Sim" || row[2] === true || row[2] === "TRUE",
+                    notes: String(row[3] || "")
+                }));
+            }
+            
+            // 3. Treino TAF
+            if (data['Treino do TAF']) {
+                state.taf_semanal = data['Treino do TAF'].slice(1).map(row => ({
+                    date: String(row[0]),
+                    pullups: parseInt(row[1]) || 0,
+                    meio_sugado: parseInt(row[2]) || 0,
+                    abdominal: parseInt(row[3]) || 0,
+                    running: parseInt(row[4]) || 0,
+                    status: String(row[5] || ""),
+                    notes: String(row[6] || "")
+                }));
+            }
+            
+            // 4. Simulados TAF (Mapeia para state.treinos)
+            if (data['Simulados do TAF']) {
+                state.treinos = data['Simulados do TAF'].slice(1).map(row => ({
+                    number: parseInt(row[0]) || 0,
+                    date: String(row[1]),
+                    pullups: parseInt(row[2]) || 0,
+                    meio_sugado: parseInt(row[3]) || 0,
+                    abdominal: parseInt(row[4]) || 0,
+                    running: parseInt(row[5]) || 0,
+                    status: String(row[6] || ""),
+                    notes: String(row[7] || "")
+                }));
+            }
+            
+            // 5. Simulados Cabecalho (Mapeia para state.simulados)
+            if (data['Simulados Cabecalho']) {
+                state.simulados = data['Simulados Cabecalho'].slice(1).map(row => ({
+                    number: parseInt(row[0]) || 0,
+                    date: String(row[1]),
+                    p1_questions: parseInt(row[2]) || 0,
+                    p1_correct: parseInt(row[3]) || 0,
+                    p2_questions: parseInt(row[4]) || 0,
+                    p2_correct: parseInt(row[5]) || 0,
+                    score: parseFloat(row[6]) || 0.0,
+                    duration: String(row[7] || ""),
+                    notes: String(row[8] || "")
+                }));
+            }
+            
+            // 6. Caderno de Erros
+            if (data['Caderno de Erros']) {
+                state.erros_questoes = data['Caderno de Erros'].slice(1).map(row => String(row[0])).filter(Boolean);
+            }
+            
+            // Salva offline no localStorage local
+            localStorage.setItem("pmma_data_v2", JSON.stringify(state));
+            
+            updateSyncText("Planilha Conectada", "synced");
+            
+            // Atualizar telas ativas
+            const activeTab = document.querySelector(".menu-item.active")?.getAttribute("data-tab");
+            if (activeTab === "dashboard") renderDashboard();
+            else if (activeTab === "cronograma") renderCronograma();
+            else if (activeTab === "edital") renderEdital();
+            else if (activeTab === "desempenho") renderDesempenho();
+        } else {
+            throw new Error(res.message);
+        }
+    } catch (e) {
+        console.error("Falha ao sincronizar com Google Sheets:", e);
+        updateSyncText("Erro Sinc. (Offline)", "error");
+    }
+}
+
+async function postToSheets(action, payload) {
+    if (!SHEET_WEBAPP_URL) return;
+    try {
+        const body = JSON.stringify({
+            action: action,
+            ...payload
+        });
+        await fetch(SHEET_WEBAPP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: body
+        });
+        console.log(`Dados enviados via POST com sucesso (Ação: ${action})`);
+    } catch (e) {
+        console.error(`Erro ao postar para planilha (Ação: ${action}):`, e);
+    }
+}
+
+async function pushErrorsToSheets() {
+    if (!SHEET_WEBAPP_URL) return;
+    try {
+        await fetch(SHEET_WEBAPP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                action: "syncErrors",
+                errors: state.erros_questoes || []
+            })
+        });
+        console.log("Caderno de erros atualizado e sincronizado na planilha.");
+    } catch (e) {
+        console.error("Erro ao sincronizar caderno de erros na planilha:", e);
+    }
+}
+
+function updateSyncText(text, status) {
+    const badge = document.getElementById("sync-status");
+    const textEl = document.getElementById("sync-text");
+    const icon = badge?.querySelector("i");
+    
+    if (!badge || !textEl || !icon) return;
+    
+    badge.className = `sync-badge ${status}`;
+    textEl.textContent = text;
+    
+    if (status === "synced") {
+        icon.className = "fa-solid fa-cloud-arrow-up";
+    } else if (status === "synching") {
+        icon.className = "fa-solid fa-rotate fa-spin";
+    } else if (status === "error" || status === "offline") {
+        icon.className = "fa-solid fa-circle-exclamation";
+    } else {
+        icon.className = "fa-solid fa-file-invoice";
     }
 }
 

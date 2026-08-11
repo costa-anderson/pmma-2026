@@ -65,11 +65,14 @@
                 </a>
             </nav>
             
-            <div class="sidebar-footer">
-                <div class="sync-badge synced" id="sync-status">
+            <div class="sidebar-footer" style="display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 12px 16px;">
+                <div class="sync-badge synced" id="sync-status" style="flex: 1; margin: 0;">
                     <i class="fa-solid fa-file-invoice"></i>
                     <span id="sync-text">Plano Ativo (V2)</span>
                 </div>
+                <button id="btn-config-sheets" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px 8px; font-size: 1rem; display: flex; align-items: center; justify-content: center;" title="Configurar Planilha do Google">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
             </div>
         </aside>
 
@@ -694,6 +697,28 @@
                 <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
                     <button type="button" class="btn" id="btn-cancel-taf">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Registrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: CONFIGURAÇÃO DO GOOGLE SHEETS -->
+    <div class="modal" id="modal-config-sheets">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-cloud"></i> Configurar Planilha do Google</h3>
+                <button class="close-btn" id="close-modal-sheets">&times;</button>
+            </div>
+            <form id="form-config-sheets" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group">
+                    <label for="sheets-webapp-url">URL do App da Web (Google Apps Script)</label>
+                    <input type="url" id="sheets-webapp-url" class="form-input" placeholder="https://script.google.com/macros/s/.../exec" required style="width: 100%; box-sizing: border-box;">
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Cole aqui a URL gerada ao implantar o script do Google Sheets.</p>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn" id="btn-cancel-sheets">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar e Conectar</button>
                 </div>
             </form>
         </div>
