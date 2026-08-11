@@ -1894,45 +1894,68 @@ async function syncDataOnline() {
     }
     
     updateSyncText("Sincronizando...", "synching");
+    console.log("Iniciando syncDataOnline com URL:", SHEET_WEBAPP_URL);
     
     try {
         const response = await fetch(`${SHEET_WEBAPP_URL}?action=getData`);
-        if (!response.ok) throw new Error("Erro de conexão com o Apps Script");
+        if (!response.ok) throw new Error("Erro de conexão com o Apps Script: " + response.statusText);
         const res = await response.json();
+        console.log("Resposta recebida do Apps Script:", res);
         
         if (res.status === "success") {
             const data = res.data;
             
             // 1. Cronograma
-            if (data['Cronograma']) {
-                state.crono = data['Cronograma'].slice(1).map(row => ({
-                    semana: String(row[0]),
-                    day: String(row[1]),
-                    subject: String(row[2]),
-                    topic: String(row[3]),
-                    studied: row[4] === "Sim" || row[4] === true || row[4] === "TRUE",
-                    duration: parseInt(row[5]) || 0,
-                    questions: parseInt(row[6]) || 0,
-                    correct: parseInt(row[7]) || 0,
-                    accuracy: parseFloat(row[8]) || 0.0,
-                    notes: String(row[9] || "")
-                }));
+            if (data['Cronograma'] && data['Cronograma'].length > 1) {
+                state.crono = data['Cronograma'].slice(1).map(row => {
+                    const isStudied = String(row[8] || "").toLowerCase() === "sim" || 
+                                      String(row[8] || "").toLowerCase() === "true" || 
+                                      String(row[8] || "").toLowerCase() === "concluído" || 
+                                      String(row[8] || "").toLowerCase() === "concluido" ||
+                                      row[8] === true;
+                    return {
+                        date: String(row[0] || ""),
+                        dia: String(row[1] || ""),
+                        semana: String(row[2] || ""),
+                        subject: String(row[3] || ""),
+                        topic: String(row[4] || ""),
+                        type: String(row[5] || ""),
+                        probability: String(row[6] || ""),
+                        hot: String(row[7] || "").includes("🔥"),
+                        studied: isStudied,
+                        duration: parseInt(row[9]) || 0,
+                        has_questions: String(row[10] || "").toLowerCase() === "sim" || row[10] === true,
+                        questions: parseInt(row[11]) || 0,
+                        correct: parseInt(row[12]) || 0,
+                        accuracy: parseFloat(row[13]) || 0.0,
+                        notes: String(row[14] || "")
+                    };
+                });
             }
             
             // 2. Edital
-            if (data['Controle do Edital']) {
-                state.edital = data['Controle do Edital'].slice(1).map(row => ({
-                    subject: String(row[0]),
-                    topic: String(row[1]),
-                    studied: row[2] === "Sim" || row[2] === true || row[2] === "TRUE",
-                    notes: String(row[3] || "")
-                }));
+            if (data['Controle do Edital'] && data['Controle do Edital'].length > 1) {
+                state.edital = data['Controle do Edital'].slice(1).map(row => {
+                    const isStudied = String(row[4] || "").toLowerCase() === "sim" || 
+                                      String(row[4] || "").toLowerCase() === "true" || 
+                                      String(row[4] || "").toLowerCase() === "concluído" || 
+                                      String(row[4] || "").toLowerCase() === "concluido" ||
+                                      row[4] === true;
+                    return {
+                        subject: String(row[0] || ""),
+                        topic: String(row[1] || ""),
+                        probability: String(row[2] || ""),
+                        hot: String(row[3] || "").includes("🔥"),
+                        studied: isStudied,
+                        notes: String(row[5] || "")
+                    };
+                });
             }
             
-            // 3. Treino TAF
-            if (data['Treino do TAF']) {
-                state.taf_semanal = data['Treino do TAF'].slice(1).map(row => ({
-                    date: String(row[0]),
+            // 3. Treino TAF (Mapeia para state.taf_semanal de 'Simulados do TAF' / 'TAF_Semanal')
+            if (data['Simulados do TAF'] && data['Simulados do TAF'].length > 1) {
+                state.taf_semanal = data['Simulados do TAF'].slice(1).map(row => ({
+                    date: String(row[0] || ""),
                     pullups: parseInt(row[1]) || 0,
                     meio_sugado: parseInt(row[2]) || 0,
                     abdominal: parseInt(row[3]) || 0,
@@ -1942,25 +1965,22 @@ async function syncDataOnline() {
                 }));
             }
             
-            // 4. Simulados TAF (Mapeia para state.treinos)
-            if (data['Simulados do TAF']) {
-                state.treinos = data['Simulados do TAF'].slice(1).map(row => ({
-                    number: parseInt(row[0]) || 0,
-                    date: String(row[1]),
-                    pullups: parseInt(row[2]) || 0,
-                    meio_sugado: parseInt(row[3]) || 0,
-                    abdominal: parseInt(row[4]) || 0,
-                    running: parseInt(row[5]) || 0,
-                    status: String(row[6] || ""),
-                    notes: String(row[7] || "")
+            // 4. Treinos Diários TAF (Mapeia para state.treinos de 'Treino do TAF' / 'Treinos')
+            if (data['Treino do TAF'] && data['Treino do TAF'].length > 1) {
+                state.treinos = data['Treino do TAF'].slice(1).map(row => ({
+                    date: String(row[0] || ""),
+                    type: String(row[1] || ""),
+                    duration: parseInt(row[2]) || 0,
+                    intensity: parseInt(row[3]) || 0,
+                    notes: String(row[4] || "")
                 }));
             }
             
             // 5. Simulados Cabecalho (Mapeia para state.simulados)
-            if (data['Simulados Cabecalho']) {
+            if (data['Simulados Cabecalho'] && data['Simulados Cabecalho'].length > 1) {
                 state.simulados = data['Simulados Cabecalho'].slice(1).map(row => ({
-                    number: parseInt(row[0]) || 0,
-                    date: String(row[1]),
+                    date: String(row[0] || ""),
+                    number: parseInt(row[1]) || 0,
                     p1_questions: parseInt(row[2]) || 0,
                     p1_correct: parseInt(row[3]) || 0,
                     p2_questions: parseInt(row[4]) || 0,
@@ -1972,17 +1992,18 @@ async function syncDataOnline() {
             }
             
             // 6. Caderno de Erros
-            if (data['Caderno de Erros']) {
-                state.erros_questoes = data['Caderno de Erros'].slice(1).map(row => String(row[0])).filter(Boolean);
+            if (data['Caderno de Erros'] && data['Caderno de Erros'].length > 1) {
+                state.erros_questoes = data['Caderno de Erros'].slice(1).map(row => String(row[0] || "")).filter(Boolean);
             }
             
             // 7. Questões Respondidas
-            if (data['Questoes Respondidas']) {
-                state.respondidas_questoes = data['Questoes Respondidas'].slice(1).map(row => String(row[0])).filter(Boolean);
+            if (data['Questoes Respondidas'] && data['Questoes Respondidas'].length > 1) {
+                state.respondidas_questoes = data['Questoes Respondidas'].slice(1).map(row => String(row[0] || "")).filter(Boolean);
             }
             
             // Salva offline no localStorage local
             localStorage.setItem("pmma_data_v2", JSON.stringify(state));
+            console.log("Sincronização concluída com sucesso! Novo estado unificado:", state);
             
             updateSyncText("Planilha Conectada", "synced");
             
@@ -1993,11 +2014,11 @@ async function syncDataOnline() {
             else if (activeTab === "edital") renderEdital();
             else if (activeTab === "desempenho") renderDesempenho();
         } else {
-            throw new Error(res.message);
+            throw new Error(res.message || "Erro desconhecido retornado pelo Apps Script");
         }
     } catch (e) {
         console.error("Falha ao sincronizar com Google Sheets:", e);
-        updateSyncText("Erro Sinc. (Offline)", "error");
+        updateSyncText("Erro Sinc. (" + e.message + ")", "error");
     }
 }
 

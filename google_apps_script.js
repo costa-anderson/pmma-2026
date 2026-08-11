@@ -1,5 +1,5 @@
 /**
- * QG PMMA 2026 - Google Apps Script Database Bridge
+ * QG PMMA 2026 - Google Apps Script Database Bridge (Robust Version)
  * Cole este código no editor de scripts do seu Google Sheets (Extensões -> Apps Script)
  * e implante como um "App da Web" com acesso para "Qualquer pessoa".
  */
@@ -51,36 +51,58 @@ function doPost(e) {
   return createResponse({ status: 'error', message: 'Ação POST desconhecida.' });
 }
 
+// Retorna uma planilha robustamente buscando nomes alternativos de abas
+function getSheetRobust(ss, targetName) {
+  var sheetMappings = {
+    'Cronograma': ['Cronograma', 'Cronograma de Estudos', 'Cronograma_de_Estudos'],
+    'Controle do Edital': ['Controle do Edital', 'Controle_Edital', 'Edital', 'Controle_do_Edital'],
+    'Registro de Estudos': ['Registro de Estudos', 'Registro_de_Estudos', 'Registro Estudos', 'Estudos'],
+    'Treino do TAF': ['Treino do TAF', 'Treinos', 'Treino_do_TAF', 'Treino TAF', 'Treino_TAF'],
+    'Simulados do TAF': ['Simulados do TAF', 'TAF_Semanal', 'Simulados_do_TAF', 'Simulados TAF', 'Simulados_TAF'],
+    'Simulados Cabecalho': ['Simulados Cabecalho', 'Simulado_Semanal', 'Simulados_Cabecalho', 'Simulado Semanal', 'Simulado Cabecalho'],
+    'Simulados Detalhes': ['Simulados Detalhes', 'Simulados_Detalhes', 'Simulado Detalhes', 'Simulado_Detalhes'],
+    'Caderno de Erros': ['Caderno de Erros', 'Caderno_de_Erros', 'Erros'],
+    'Questoes Respondidas': ['Questoes Respondidas', 'Questoes_Respondidas', 'Respondidas', 'Questões Respondidas', 'Questões_Respondidas']
+  };
+  
+  var altNames = sheetMappings[targetName] || [targetName];
+  for (var i = 0; i < altNames.length; i++) {
+    var sheet = ss.getSheetByName(altNames[i]);
+    if (sheet) return sheet;
+  }
+  return null;
+}
+
 function handleGetData() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheets = ['Cronograma', 'Cronograma de Estudos', 'Controle do Edital', 'Registro de Estudos', 'Simulados Cabecalho', 'Simulados Detalhes', 'Treino do TAF', 'Simulados do TAF', 'Caderno de Erros', 'Questoes Respondidas'];
-    var result = {};
+    if (!ss) return createResponse({ status: 'error', message: 'Script não associado à planilha. Abra a planilha e clique em Extensões -> Apps Script.' });
     
-    // Auto-cria a aba Caderno de Erros se ela não existir
-    if (!ss.getSheetByName('Caderno de Erros')) {
-      var errSheet = ss.insertSheet('Caderno de Erros');
+    // Auto-cria Caderno de Erros se não existir
+    var errSheet = getSheetRobust(ss, 'Caderno de Erros');
+    if (!errSheet) {
+      errSheet = ss.insertSheet('Caderno de Erros');
       errSheet.appendRow(['ID da Questão', 'Data de Registro']);
     }
     
-    // Auto-cria a aba Questoes Respondidas se ela não existir
-    if (!ss.getSheetByName('Questoes Respondidas')) {
-      var respSheet = ss.insertSheet('Questoes Respondidas');
+    // Auto-cria Questoes Respondidas se não existir
+    var respSheet = getSheetRobust(ss, 'Questoes Respondidas');
+    if (!respSheet) {
+      respSheet = ss.insertSheet('Questoes Respondidas');
       respSheet.appendRow(['ID da Questão', 'Data de Resposta']);
     }
+
+    var result = {};
+    var listToLoad = ['Cronograma', 'Controle do Edital', 'Registro de Estudos', 'Simulados Cabecalho', 'Simulados Detalhes', 'Treino do TAF', 'Simulados do TAF', 'Caderno de Erros', 'Questoes Respondidas'];
     
-    sheets.forEach(function(sheetName) {
-      var sheet = ss.getSheetByName(sheetName);
+    listToLoad.forEach(function(targetName) {
+      var sheet = getSheetRobust(ss, targetName);
       if (sheet) {
-        var values = sheet.getDataRange().getValues();
-        var key = (sheetName === 'Cronograma de Estudos') ? 'Cronograma' : sheetName;
-        result[key] = values;
+        result[targetName] = sheet.getDataRange().getValues();
+      } else {
+        result[targetName] = [];
       }
     });
-    
-    if (!result['Cronograma']) {
-      result['Cronograma'] = [];
-    }
     
     return createResponse({ status: 'success', data: result });
   } catch (e) {
@@ -91,16 +113,14 @@ function handleGetData() {
 function handleSyncErrors(data) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('Caderno de Erros');
+    var sheet = getSheetRobust(ss, 'Caderno de Erros');
     if (!sheet) {
       sheet = ss.insertSheet('Caderno de Erros');
     }
     
-    // Limpa a planilha e insere o cabeçalho
     sheet.clear();
     sheet.appendRow(['ID da Questão', 'Data de Registro']);
     
-    // Insere cada ID de erro
     if (data.errors && data.errors.length > 0) {
       var dateStr = new Date().toLocaleDateString('pt-BR');
       data.errors.forEach(function(id) {
@@ -117,16 +137,14 @@ function handleSyncErrors(data) {
 function handleSyncRespondidas(data) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('Questoes Respondidas');
+    var sheet = getSheetRobust(ss, 'Questoes Respondidas');
     if (!sheet) {
       sheet = ss.insertSheet('Questoes Respondidas');
     }
     
-    // Limpa a planilha e insere o cabeçalho
     sheet.clear();
     sheet.appendRow(['ID da Questão', 'Data de Resposta']);
     
-    // Insere cada ID de respondida
     if (data.answered && data.answered.length > 0) {
       var dateStr = new Date().toLocaleDateString('pt-BR');
       data.answered.forEach(function(id) {
@@ -143,10 +161,12 @@ function handleSyncRespondidas(data) {
 function handleAddStudy(data) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('Registro de Estudos');
-    if (!sheet) return createResponse({ status: 'error', message: 'Aba Registro de Estudos não encontrada.' });
+    var sheet = getSheetRobust(ss, 'Registro de Estudos');
+    if (!sheet) {
+      sheet = ss.insertSheet('Registro de Estudos');
+      sheet.appendRow(['Data', 'Matéria', 'Assunto', 'Tipo de Estudo', 'Tempo (min)', 'Questões Feitas', 'Acertos', 'Erros', 'Aproveitamento', 'Anotações']);
+    }
     
-    // Formato da linha: Data, Matéria, Assunto, Tipo de Estudo, Tempo (min), Questões Feitas, Acertos, Erros, Aproveitamento, Anotações
     sheet.appendRow([
       data.date,
       data.subject,
@@ -156,7 +176,7 @@ function handleAddStudy(data) {
       data.questions,
       data.correct,
       data.errors,
-      data.correct / (data.questions || 1), // Aproveitamento (%)
+      data.correct / (data.questions || 1),
       data.notes
     ]);
     
@@ -169,7 +189,7 @@ function handleAddStudy(data) {
 function handleToggleEdital(data) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('Controle do Edital');
+    var sheet = getSheetRobust(ss, 'Controle do Edital');
     if (!sheet) return createResponse({ status: 'error', message: 'Aba Controle do Edital não encontrada.' });
     
     var values = sheet.getDataRange().getValues();
@@ -181,11 +201,6 @@ function handleToggleEdital(data) {
       var rowTopic = String(values[i][1]).toLowerCase().trim();
       
       if (rowSubject === targetSubject && rowTopic === targetTopic) {
-        // Coluna C (Índice 2): Estudado? (Sim/Não)
-        // Coluna D (Índice 3): Questões Feitas
-        // Coluna E (Índice 4): Acertos
-        // Coluna H (Índice 7): Status Revisão (Pendente / Em Revisão / Revisado)
-        
         if (data.studied !== undefined) {
           sheet.getRange(i + 1, 3).setValue(data.studied ? 'Sim' : 'Não');
         }
@@ -198,7 +213,6 @@ function handleToggleEdital(data) {
         if (data.correct !== undefined) {
           sheet.getRange(i + 1, 5).setValue(data.correct);
         }
-        
         return createResponse({ status: 'success', message: 'Edital atualizado com sucesso!' });
       }
     }
@@ -212,10 +226,12 @@ function handleToggleEdital(data) {
 function handleAddTAF(data) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('Treino do TAF');
-    if (!sheet) return createResponse({ status: 'error', message: 'Aba Treino do TAF não encontrada.' });
+    var sheet = getSheetRobust(ss, 'Treino do TAF');
+    if (!sheet) {
+      sheet = ss.insertSheet('Treino do TAF');
+      sheet.appendRow(['Data', 'Exercício', 'Resultado', 'Meta', 'Aproveitamento', 'Status Treino', 'Séries', 'Tempo Descanso (s)', 'Tempo Total (min)']);
+    }
     
-    // Colunas: Data, Exercício, Resultado (Reps/Min/Metros), Meta, Aproveitamento, Status Treino, Séries, Tempo Descanso (s), Tempo Total (min)
     sheet.appendRow([
       data.date,
       data.exercise,
@@ -237,10 +253,12 @@ function handleAddTAF(data) {
 function handleAddTAFSimulado(data) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('Simulados do TAF');
-    if (!sheet) return createResponse({ status: 'error', message: 'Aba Simulados do TAF não encontrada.' });
+    var sheet = getSheetRobust(ss, 'Simulados do TAF');
+    if (!sheet) {
+      sheet = ss.insertSheet('Simulados do TAF');
+      sheet.appendRow(['Data', 'Barra', 'Meio Sugado', 'Abdominal', 'Corrida', 'Tempo Total', 'Concluído?', 'Observações']);
+    }
     
-    // Colunas: Data, Barra, Meio Sugado, Abdominal, Corrida, Tempo Total, Concluído? (Aprovado/Não Alcançado), Observações
     sheet.appendRow([
       data.date,
       data.barra,
@@ -261,16 +279,20 @@ function handleAddTAFSimulado(data) {
 function handleAddSimulado(data) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheetCab = ss.getSheetByName('Simulados Cabecalho');
-    var sheetDet = ss.getSheetByName('Simulados Detalhes');
+    var sheetCab = getSheetRobust(ss, 'Simulados Cabecalho');
+    var sheetDet = getSheetRobust(ss, 'Simulados Detalhes');
     
-    if (!sheetCab || !sheetDet) {
-      return createResponse({ status: 'error', message: 'Abas de Simulado não encontradas.' });
+    if (!sheetCab) {
+      sheetCab = ss.insertSheet('Simulados Cabecalho');
+      sheetCab.appendRow(['ID Simulado', 'Nome Simulado', 'Data', 'Total Questões', 'Total Acertos']);
+    }
+    if (!sheetDet) {
+      sheetDet = ss.insertSheet('Simulados Detalhes');
+      sheetDet.appendRow(['ID Simulado', 'Matéria', 'Tópico', 'Questões', 'Acertos', 'Erros', 'Observação Erro', 'Precisa Revisar']);
     }
     
     var simId = 'SIM-' + new Date().getTime();
     
-    // Registro do Cabeçalho: ID, Nome, Data, Total Questões, Total Acertos
     sheetCab.appendRow([
       simId,
       data.name,
@@ -279,9 +301,7 @@ function handleAddSimulado(data) {
       data.totalCorrect
     ]);
     
-    // Registro dos Detalhes de cada matéria
     data.details.forEach(function(detail) {
-      // ID Simulado, Matéria, Tópico, Questões, Acertos, Erros, Observação Erro, Precisa Revisar
       sheetDet.appendRow([
         simId,
         detail.subject,
@@ -303,11 +323,11 @@ function handleAddSimulado(data) {
 function handleUpdateCrono(data) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('Cronograma') || ss.getSheetByName('Cronograma de Estudos');
+    var sheet = getSheetRobust(ss, 'Cronograma');
     if (!sheet) return createResponse({ status: 'error', message: 'Aba de Cronograma não encontrada.' });
     
     var values = sheet.getDataRange().getValues();
-    var targetDateStr = String(data.date).trim(); // Formato esperado DD/MM/YYYY
+    var targetDateStr = String(data.date).trim();
     
     for (var i = 1; i < values.length; i++) {
       var cellVal = values[i][0];
@@ -319,7 +339,6 @@ function handleUpdateCrono(data) {
       }
       
       if (formattedCellDate === targetDateStr) {
-        // Coluna J (Índice 9): Concluído?
         sheet.getRange(i + 1, 10).setValue(data.completed ? 'Concluído' : 'A Estudar');
         return createResponse({ status: 'success', message: 'Dia do cronograma atualizado!' });
       }
@@ -334,7 +353,7 @@ function handleUpdateCrono(data) {
 function handleToggleErrorReview(data) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('Simulados Detalhes');
+    var sheet = getSheetRobust(ss, 'Simulados Detalhes');
     if (!sheet) return createResponse({ status: 'error', message: 'Aba Simulados Detalhes não encontrada.' });
     
     var values = sheet.getDataRange().getValues();
@@ -348,10 +367,8 @@ function handleToggleErrorReview(data) {
       var rowTopic = String(values[i][2]).toLowerCase().trim();
       
       if (rowSimId === simId && rowSubject === subject && rowTopic === topic) {
-        // Coluna H (Índice 7): Precisa Revisar (Sim/Não)
         sheet.getRange(i + 1, 8).setValue(data.needsReview ? 'Sim' : 'Não');
         if (data.notes !== undefined) {
-          // Coluna G (Índice 6): Anotações do Erro
           sheet.getRange(i + 1, 7).setValue(data.notes);
         }
         return createResponse({ status: 'success', message: 'Status de revisão de erro atualizado!' });
@@ -369,7 +386,7 @@ function handleDeleteHistoryItem(data) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
     if (data.cat === 'Estudo Diário') {
-      var sheet = ss.getSheetByName('Registro de Estudos');
+      var sheet = getSheetRobust(ss, 'Registro de Estudos');
       if (!sheet) return createResponse({ status: 'error', message: 'Aba Registro de Estudos não encontrada.' });
       var values = sheet.getDataRange().getValues();
       for (var i = values.length - 1; i >= 1; i--) {
@@ -379,8 +396,8 @@ function handleDeleteHistoryItem(data) {
         }
       }
     } else if (data.cat === 'Simulado Teórico') {
-      var sheetCab = ss.getSheetByName('Simulados Cabecalho');
-      var sheetDet = ss.getSheetByName('Simulados Detalhes');
+      var sheetCab = getSheetRobust(ss, 'Simulados Cabecalho');
+      var sheetDet = getSheetRobust(ss, 'Simulados Detalhes');
       if (sheetCab) {
         var vals = sheetCab.getDataRange().getValues();
         for (var i = vals.length - 1; i >= 1; i--) {
@@ -400,7 +417,7 @@ function handleDeleteHistoryItem(data) {
       }
       return createResponse({ status: 'success', message: 'Simulado excluído!' });
     } else if (data.cat === 'Treino TAF') {
-      var sheet = ss.getSheetByName('Treino do TAF');
+      var sheet = getSheetRobust(ss, 'Treino do TAF');
       if (!sheet) return createResponse({ status: 'error', message: 'Aba Treino do TAF não encontrada.' });
       var values = sheet.getDataRange().getValues();
       for (var i = values.length - 1; i >= 1; i--) {
@@ -410,7 +427,7 @@ function handleDeleteHistoryItem(data) {
         }
       }
     } else if (data.cat === 'Simulado TAF Completo') {
-      var sheet = ss.getSheetByName('Simulados do TAF');
+      var sheet = getSheetRobust(ss, 'Simulados do TAF');
       if (!sheet) return createResponse({ status: 'error', message: 'Aba Simulados do TAF não encontrada.' });
       var values = sheet.getDataRange().getValues();
       for (var i = values.length - 1; i >= 1; i--) {
@@ -432,7 +449,7 @@ function handleEditHistoryItem(data) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
     if (data.cat === 'Estudo Diário') {
-      var sheet = ss.getSheetByName('Registro de Estudos');
+      var sheet = getSheetRobust(ss, 'Registro de Estudos');
       if (!sheet) return createResponse({ status: 'error', message: 'Aba Registro de Estudos não encontrada.' });
       var values = sheet.getDataRange().getValues();
       for (var i = 1; i < values.length; i++) {
@@ -447,7 +464,7 @@ function handleEditHistoryItem(data) {
         }
       }
     } else if (data.cat === 'Treino TAF') {
-      var sheet = ss.getSheetByName('Treino do TAF');
+      var sheet = getSheetRobust(ss, 'Treino do TAF');
       if (!sheet) return createResponse({ status: 'error', message: 'Aba Treino do TAF não encontrada.' });
       var values = sheet.getDataRange().getValues();
       for (var i = 1; i < values.length; i++) {
@@ -462,7 +479,7 @@ function handleEditHistoryItem(data) {
         }
       }
     } else if (data.cat === 'Simulado TAF Completo') {
-      var sheet = ss.getSheetByName('Simulados do TAF');
+      var sheet = getSheetRobust(ss, 'Simulados do TAF');
       if (!sheet) return createResponse({ status: 'error', message: 'Aba Simulados do TAF não encontrada.' });
       var values = sheet.getDataRange().getValues();
       for (var i = 1; i < values.length; i++) {

@@ -191,6 +191,18 @@ h1, h2, h3, h4, .brand-text h1, .metric-value {
     color: var(--success);
 }
 
+.sync-badge.synching {
+    color: var(--accent);
+}
+
+.sync-badge.error {
+    color: var(--danger);
+}
+
+.sync-badge.offline {
+    color: var(--text-muted);
+}
+
 .sync-badge i {
     font-size: 0.9rem;
 }
