@@ -44,6 +44,8 @@ function doPost(e) {
     return handleEditHistoryItem(data);
   } else if (action === 'syncErrors') {
     return handleSyncErrors(data);
+  } else if (action === 'syncRespondidas') {
+    return handleSyncRespondidas(data);
   }
   
   return createResponse({ status: 'error', message: 'Ação POST desconhecida.' });
@@ -52,13 +54,19 @@ function doPost(e) {
 function handleGetData() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheets = ['Cronograma', 'Cronograma de Estudos', 'Controle do Edital', 'Registro de Estudos', 'Simulados Cabecalho', 'Simulados Detalhes', 'Treino do TAF', 'Simulados do TAF', 'Caderno de Erros'];
+    var sheets = ['Cronograma', 'Cronograma de Estudos', 'Controle do Edital', 'Registro de Estudos', 'Simulados Cabecalho', 'Simulados Detalhes', 'Treino do TAF', 'Simulados do TAF', 'Caderno de Erros', 'Questoes Respondidas'];
     var result = {};
     
     // Auto-cria a aba Caderno de Erros se ela não existir
     if (!ss.getSheetByName('Caderno de Erros')) {
       var errSheet = ss.insertSheet('Caderno de Erros');
       errSheet.appendRow(['ID da Questão', 'Data de Registro']);
+    }
+    
+    // Auto-cria a aba Questoes Respondidas se ela não existir
+    if (!ss.getSheetByName('Questoes Respondidas')) {
+      var respSheet = ss.insertSheet('Questoes Respondidas');
+      respSheet.appendRow(['ID da Questão', 'Data de Resposta']);
     }
     
     sheets.forEach(function(sheetName) {
@@ -101,6 +109,32 @@ function handleSyncErrors(data) {
     }
     
     return createResponse({ status: 'success', message: 'Caderno de erros sincronizado com sucesso!' });
+  } catch (e) {
+    return createResponse({ status: 'error', message: e.toString() });
+  }
+}
+
+function handleSyncRespondidas(data) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('Questoes Respondidas');
+    if (!sheet) {
+      sheet = ss.insertSheet('Questoes Respondidas');
+    }
+    
+    // Limpa a planilha e insere o cabeçalho
+    sheet.clear();
+    sheet.appendRow(['ID da Questão', 'Data de Resposta']);
+    
+    // Insere cada ID de respondida
+    if (data.answered && data.answered.length > 0) {
+      var dateStr = new Date().toLocaleDateString('pt-BR');
+      data.answered.forEach(function(id) {
+        sheet.appendRow([id, dateStr]);
+      });
+    }
+    
+    return createResponse({ status: 'success', message: 'Questões respondidas sincronizadas com sucesso!' });
   } catch (e) {
     return createResponse({ status: 'error', message: e.toString() });
   }

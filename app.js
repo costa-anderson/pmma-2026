@@ -134,6 +134,7 @@ async function loadData() {
         try {
             state = JSON.parse(localData);
             if (!state.erros_questoes) state.erros_questoes = [];
+            if (!state.respondidas_questoes) state.respondidas_questoes = [];
             console.log("Dados carregados do localStorage.");
             appDataReady();
             return;
@@ -148,6 +149,7 @@ async function loadData() {
         if (response.ok) {
             state = await response.json();
             if (!state.erros_questoes) state.erros_questoes = [];
+            if (!state.respondidas_questoes) state.respondidas_questoes = [];
             saveDataLocal();
             console.log("Dados carregados do arquivo pmma_data_export.json.");
         } else {
@@ -162,6 +164,7 @@ async function loadData() {
 function saveDataLocal() {
     localStorage.setItem("pmma_data_v2", JSON.stringify(state));
     pushErrorsToSheets();
+    pushRespondidasToSheets();
 }
 
 function appDataReady() {
@@ -1299,7 +1302,9 @@ function startRevisao(resumeFromPaused) {
 
     const cebraspeOnly = document.getElementById("revisao-cebraspe-only").checked;
     const errorsOnly = document.getElementById("revisao-errors-only").checked;
+    const excludeAnswered = document.getElementById("revisao-exclude-answered").checked;
     const errIds = new Set(state.erros_questoes || []);
+    const answeredIds = new Set(state.respondidas_questoes || []);
 
     checkboxes.forEach((chk, i) => {
         if (!chk.checked) return;
@@ -1346,6 +1351,10 @@ function startRevisao(resumeFromPaused) {
         
         if (errorsOnly) {
             topicPool = topicPool.filter(q => errIds.has(q.id));
+        }
+        
+        if (excludeAnswered) {
+            topicPool = topicPool.filter(q => !answeredIds.has(q.id));
         }
         
         // Randomiza e fatia na quantidade selecionada
@@ -1470,6 +1479,11 @@ function revisaoAnswer(userChoice) {
     
     revisaoState.answers[revisaoState.currentIndex] = ansRecord;
     
+    // Registra a questão como respondida
+    if (!state.respondidas_questoes.includes(q.id)) {
+        state.respondidas_questoes.push(q.id);
+    }
+    
     // Gerenciador do Caderno de Erros baseado nos IDs das questões
     if (!isCorrect) {
         // Adiciona à lista de erros se já não estiver lá
@@ -1480,7 +1494,7 @@ function revisaoAnswer(userChoice) {
         // Remove da lista de erros ao acertar
         state.erros_questoes = state.erros_questoes.filter(id => id !== q.id);
     }
-    saveDataLocal(); // Salva estado de erros do usuário
+    saveDataLocal(); // Salva estado de erros e respondidas do usuário
     
     // Desabilitar botões
     document.getElementById("revisao-btn-certo").disabled = true;
@@ -1773,6 +1787,21 @@ function checkPendingSimulados() {
                                 }
                             });
                         }
+                        
+                        // Registra as 50 questões do simulado externo como respondidas
+                        let prefix = "";
+                        if (res.name.toLowerCase().includes("estatuto")) prefix = "ESTATUTO";
+                        else if (res.name.toLowerCase().includes("lob") || res.name.toLowerCase().includes("12896")) prefix = "LOB";
+                        else if (res.name.toLowerCase().includes("14751") || res.name.toLowerCase().includes("orgânica")) prefix = "LORGANICA";
+                        
+                        if (prefix) {
+                            for (let n = 1; n <= 50; n++) {
+                                const qId = `Q-LEG-${prefix}-${String(n).padStart(4, '0')}`;
+                                if (!state.respondidas_questoes.includes(qId)) {
+                                    state.respondidas_questoes.push(qId);
+                                }
+                            }
+                        }
                     }
                 });
                 
@@ -1947,6 +1976,11 @@ async function syncDataOnline() {
                 state.erros_questoes = data['Caderno de Erros'].slice(1).map(row => String(row[0])).filter(Boolean);
             }
             
+            // 7. Questões Respondidas
+            if (data['Questoes Respondidas']) {
+                state.respondidas_questoes = data['Questoes Respondidas'].slice(1).map(row => String(row[0])).filter(Boolean);
+            }
+            
             // Salva offline no localStorage local
             localStorage.setItem("pmma_data_v2", JSON.stringify(state));
             
@@ -2005,6 +2039,26 @@ async function pushErrorsToSheets() {
         console.log("Caderno de erros atualizado e sincronizado na planilha.");
     } catch (e) {
         console.error("Erro ao sincronizar caderno de erros na planilha:", e);
+    }
+}
+
+async function pushRespondidasToSheets() {
+    if (!SHEET_WEBAPP_URL) return;
+    try {
+        await fetch(SHEET_WEBAPP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                action: "syncRespondidas",
+                answered: state.respondidas_questoes || []
+            })
+        });
+        console.log("Questões respondidas atualizadas e sincronizadas na planilha.");
+    } catch (e) {
+        console.error("Erro ao sincronizar respondidas na planilha:", e);
     }
 }
 
