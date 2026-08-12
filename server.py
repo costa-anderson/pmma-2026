@@ -304,21 +304,24 @@ def add_study_bulk():
                     sub_val = clean_str(sheet_edit.cell(row=row_idx, column=1).value)
                     top_val = clean_str(sheet_edit.cell(row=row_idx, column=2).value)
                     if sub_val.lower() == subject.lower() and top_val.lower() == topic.lower():
-                        sheet_edit.cell(row=row_idx, column=5, value="Sim")
-                        if notes:
-                            sheet_edit.cell(row=row_idx, column=6, value=notes)
+                        if study_type.lower() not in ["simulado", "revisão", "taf"]:
+                            sheet_edit.cell(row=row_idx, column=5, value="Sim")
+                            if notes:
+                                sheet_edit.cell(row=row_idx, column=6, value=notes)
                         updated_edital = True
                         break
                 if not updated_edital and subject and topic:
-                    sheet_edit.append([subject, topic, "Alta", "Não", "Sim", notes])
-                    
+                    if study_type.lower() not in ["simulado", "revisão", "taf"]:
+                        sheet_edit.append([subject, topic, "Alta", "Não", "Sim", notes])
+                        
             # 3. Registrar no Cronograma
             if sheet_crono:
                 updated_crono = False
                 for row_idx in range(2, sheet_crono.max_row + 1):
                     sub_val = clean_str(sheet_crono.cell(row=row_idx, column=4).value)
                     top_val = clean_str(sheet_crono.cell(row=row_idx, column=5).value)
-                    if sub_val.lower() == subject.lower() and top_val.lower() == topic.lower():
+                    type_val = clean_str(sheet_crono.cell(row=row_idx, column=6).value)
+                    if sub_val.lower() == subject.lower() and top_val.lower() == topic.lower() and type_val.lower() == study_type.lower():
                         sheet_crono.cell(row=row_idx, column=9, value="Sim")
                         sheet_crono.cell(row=row_idx, column=10, value=duration)
                         sheet_crono.cell(row=row_idx, column=11, value="Sim" if questions > 0 else "Não")
@@ -355,6 +358,7 @@ def add_study():
     questions = clean_int(req.get("questions", 0))
     correct = clean_int(req.get("correct", 0))
     notes = req.get("notes", "")
+    completed = req.get("completed", True)
     
     errors = max(0, questions - correct)
     accuracy = correct / questions if questions > 0 else 0.0
@@ -363,13 +367,14 @@ def add_study():
         # Importante: data_only=False preserva as formulas do Excel
         wb = openpyxl.load_workbook(EXCEL_FILE, data_only=False)
         
-        # 1. Registrar na aba Registro_de_Estudos
-        if "Registro_de_Estudos" not in wb.sheetnames:
-            ensure_sheets_exist()
-            wb = openpyxl.load_workbook(EXCEL_FILE, data_only=False)
-            
-        sheet_reg = wb["Registro_de_Estudos"]
-        sheet_reg.append([date_str, subject, topic, study_type, duration, questions, correct, errors, accuracy, notes])
+        # 1. Registrar na aba Registro_de_Estudos (apenas se completed for True)
+        if completed:
+            if "Registro_de_Estudos" not in wb.sheetnames:
+                ensure_sheets_exist()
+                wb = openpyxl.load_workbook(EXCEL_FILE, data_only=False)
+                
+            sheet_reg = wb["Registro_de_Estudos"]
+            sheet_reg.append([date_str, subject, topic, study_type, duration, questions, correct, errors, accuracy, notes])
         
         # 2. Dar check no Controle_Edital
         if "Controle_Edital" in wb.sheetnames:
@@ -379,40 +384,51 @@ def add_study():
                 sub_val = clean_str(sheet_edit.cell(row=row_idx, column=1).value)
                 top_val = clean_str(sheet_edit.cell(row=row_idx, column=2).value)
                 if sub_val.lower() == subject.lower() and top_val.lower() == topic.lower():
-                    sheet_edit.cell(row=row_idx, column=5, value="Sim")
-                    if notes:
-                        sheet_edit.cell(row=row_idx, column=6, value=notes)
+                    if completed:
+                        if study_type.lower() not in ["simulado", "revisão", "taf"]:
+                            sheet_edit.cell(row=row_idx, column=5, value="Sim")
+                            if notes:
+                                sheet_edit.cell(row=row_idx, column=6, value=notes)
+                    else:
+                        sheet_edit.cell(row=row_idx, column=5, value="Não")
                     updated_edital = True
                     break
-            # Caso não ache no edital mas seja uma matéria/tópico válido, podemos registrar
-            if not updated_edital and subject and topic:
-                sheet_edit.append([subject, topic, "Alta", "Não", "Sim", notes])
+            # Caso não ache no edital mas seja uma matéria/tópico válido e completed for True, podemos registrar
+            if not updated_edital and subject and topic and completed:
+                if study_type.lower() not in ["simulado", "revisão", "taf"]:
+                    sheet_edit.append([subject, topic, "Alta", "Não", "Sim", notes])
                 
         # 3. Sincronizar com o Cronograma
         if "Cronograma" in wb.sheetnames:
             sheet_crono = wb["Cronograma"]
             updated_crono = False
             
-            # Procura um registro existente no Cronograma pendente
+            # Procura um registro existente no Cronograma que tenha a mesma matéria, assunto E TIPO
             for row_idx in range(2, sheet_crono.max_row + 1):
                 sub_val = clean_str(sheet_crono.cell(row=row_idx, column=4).value)
                 top_val = clean_str(sheet_crono.cell(row=row_idx, column=5).value)
-                stud_val = clean_str(sheet_crono.cell(row=row_idx, column=9).value).lower()
+                type_val = clean_str(sheet_crono.cell(row=row_idx, column=6).value)
                 
-                # Procura mesma matéria e assunto que esteja pendente ("não")
-                if sub_val.lower() == subject.lower() and top_val.lower() == topic.lower():
-                    # Atualiza os dados da linha
-                    sheet_crono.cell(row=row_idx, column=9, value="Sim")
-                    sheet_crono.cell(row=row_idx, column=10, value=duration)
-                    sheet_crono.cell(row=row_idx, column=11, value="Sim" if questions > 0 else "Não")
-                    sheet_crono.cell(row=row_idx, column=12, value=questions)
-                    sheet_crono.cell(row=row_idx, column=13, value=correct)
-                    sheet_crono.cell(row=row_idx, column=14, value=accuracy)
+                if sub_val.lower() == subject.lower() and top_val.lower() == topic.lower() and type_val.lower() == study_type.lower():
+                    if completed:
+                        sheet_crono.cell(row=row_idx, column=9, value="Sim")
+                        sheet_crono.cell(row=row_idx, column=10, value=duration)
+                        sheet_crono.cell(row=row_idx, column=11, value="Sim" if questions > 0 else "Não")
+                        sheet_crono.cell(row=row_idx, column=12, value=questions)
+                        sheet_crono.cell(row=row_idx, column=13, value=correct)
+                        sheet_crono.cell(row=row_idx, column=14, value=accuracy)
+                    else:
+                        sheet_crono.cell(row=row_idx, column=9, value="Não")
+                        sheet_crono.cell(row=row_idx, column=10, value=None)
+                        sheet_crono.cell(row=row_idx, column=11, value="Não")
+                        sheet_crono.cell(row=row_idx, column=12, value=None)
+                        sheet_crono.cell(row=row_idx, column=13, value=None)
+                        sheet_crono.cell(row=row_idx, column=14, value=None)
                     updated_crono = True
                     break
                     
-            # Se não achou na grade semanal, é um "Estudo Solto". Inserimos no final do Cronograma como extra.
-            if not updated_crono and subject and topic:
+            # Se não achou na grade semanal e completed for True, é um "Estudo Solto". Inserimos no final.
+            if not updated_crono and subject and topic and completed:
                 sheet_crono.append([
                     date_str, "Extra", "Semana Extra", subject, topic, study_type, 
                     "Alta", "Não", "Sim", duration, "Sim" if questions > 0 else "Não",
@@ -450,23 +466,14 @@ def add_review():
         sheet_reg = wb["Registro_de_Estudos"]
         sheet_reg.append([date_str, subject, topic, "Revisão", duration, questions, correct, errors, accuracy, notes])
         
-        # 2. Garante check no edital
-        if "Controle_Edital" in wb.sheetnames:
-            sheet_edit = wb["Controle_Edital"]
-            for row_idx in range(2, sheet_edit.max_row + 1):
-                sub_val = clean_str(sheet_edit.cell(row=row_idx, column=1).value)
-                top_val = clean_str(sheet_edit.cell(row=row_idx, column=2).value)
-                if sub_val.lower() == subject.lower() and top_val.lower() == topic.lower():
-                    sheet_edit.cell(row=row_idx, column=5, value="Sim")
-                    break
-                    
-        # 3. Garante check no cronograma
+        # 2. Garante check no cronograma
         if "Cronograma" in wb.sheetnames:
             sheet_crono = wb["Cronograma"]
             for row_idx in range(2, sheet_crono.max_row + 1):
                 sub_val = clean_str(sheet_crono.cell(row=row_idx, column=4).value)
                 top_val = clean_str(sheet_crono.cell(row=row_idx, column=5).value)
-                if sub_val.lower() == subject.lower() and top_val.lower() == topic.lower():
+                type_val = clean_str(sheet_crono.cell(row=row_idx, column=6).value)
+                if sub_val.lower() == subject.lower() and top_val.lower() == topic.lower() and type_val.lower() == "revisão":
                     sheet_crono.cell(row=row_idx, column=9, value="Sim")
                     break
                     

@@ -286,7 +286,8 @@ async function handleStudyFormSubmit(e) {
         duration: duration,
         questions: questions,
         correct: correct,
-        notes: notes
+        notes: notes,
+        completed: completed
     };
     
     updateSyncText("Salvando estudo no Excel...", "synching");
