@@ -41,7 +41,30 @@ async function loadData() {
         }
         throw new Error("Erro na resposta do servidor.");
     } catch (err) {
-        console.error("Falha ao carregar dados do Excel, usando backup local:", err);
+        console.error("Falha ao carregar dados do Excel, tentando arquivo de dados estático:", err);
+        
+        try {
+            // Tenta carregar do pmma_data_export.json estático (para rodar no GitHub Pages/Modo Consulta)
+            const staticResponse = await fetch(`${API_BASE}/pmma_data_export.json`);
+            if (staticResponse.ok) {
+                const staticData = await staticResponse.json();
+                state = staticData;
+                if (!state.historico_estudos) state.historico_estudos = [];
+                if (!state.caderno_erros) state.caderno_erros = [];
+                if (!state.crono) state.crono = [];
+                if (!state.edital) state.edital = [];
+                if (!state.treinos) state.treinos = [];
+                if (!state.taf_semanal) state.taf_semanal = [];
+                if (!state.simulados) state.simulados = [];
+                
+                localStorage.setItem("pmma_local_backup", JSON.stringify(state));
+                updateSyncText("Modo Consulta (Git)", "synced");
+                return true;
+            }
+        } catch (staticErr) {
+            console.error("Falha ao carregar dados estáticos:", staticErr);
+        }
+        
         updateSyncText("Modo Offline (Backup)", "error");
         
         // Tenta carregar do backup local do browser
