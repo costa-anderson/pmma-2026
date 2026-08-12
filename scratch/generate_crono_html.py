@@ -30,6 +30,18 @@ def generate_static_crono():
             continue
         
         # Ler valores
+        raw_date = r[0]
+        date_str = ""
+        if isinstance(raw_date, datetime.datetime):
+            date_str = raw_date.strftime("%d/%m/%Y")
+        elif raw_date is not None:
+            date_str = str(raw_date).split(" ")[0].strip()
+            try:
+                dt = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+                date_str = dt.strftime("%d/%m/%Y")
+            except ValueError:
+                pass
+                
         dia = str(r[1] or "Extra").strip()
         semana = str(r[2] or "Sem Filtro").strip()
         subject = str(r[3] or "").strip()
@@ -45,9 +57,12 @@ def generate_static_crono():
             crono_data[semana] = OrderedDict()
         
         if dia not in crono_data[semana]:
-            crono_data[semana][dia] = []
+            crono_data[semana][dia] = {
+                "date": date_str,
+                "topics": []
+            }
 
-        crono_data[semana][dia].append({
+        crono_data[semana][dia]["topics"].append({
             "subject": subject,
             "topic": topic,
             "type": type_study,
@@ -456,20 +471,26 @@ def generate_static_crono():
         active_class = ""
 
         # Loop pelos dias da semana
-        for d_name, d_topics in w_days.items():
+        for d_name, d_val in w_days.items():
+            d_date = d_val["date"]
+            d_topics = d_val["topics"]
+            
             # Contar totais e concluídos
             total_t = len(d_topics)
             done_t = sum(1 for t in d_topics if t["studied"])
             pct_done = int((done_t / total_t) * 100) if total_t > 0 else 0
 
             badge_html = f'<span class="badge-done">{done_t}/{total_t} Concluído</span>' if pct_done == 100 else f'<span>{done_t}/{total_t} batido</span>'
+            
+            # Exibir a data se houver
+            date_display = f' <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.6; margin-left: 4px;">({d_date})</span>' if d_date else ''
 
             html_content += f'            <!-- Grupo {d_name} -->\n'
             html_content += f'            <div class="day-group" id="group-{w_name.replace(" ", "-")}-{d_name}">\n'
             html_content += f'                <div class="day-header" onclick="toggleDay(\'{w_name.replace(" ", "-")}-{d_name}\')">\n'
             html_content += f'                    <div class="day-title">\n'
             html_content += f'                        <i class="fa-solid fa-calendar-day"></i>\n'
-            html_content += f'                        <span>{d_name}</span>\n'
+            html_content += f'                        <span>{d_name}{date_display}</span>\n'
             html_content += f'                    </div>\n'
             html_content += f'                    <div class="day-stats">\n'
             html_content += f'                        {badge_html}\n'
