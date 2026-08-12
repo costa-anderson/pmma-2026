@@ -245,6 +245,18 @@ def get_data():
                             "explanation": clean_str(r[6])
                         })
                         
+        # Sincroniza arquivos de backup e consulta estáticos
+        try:
+            import json
+            with open("pmma_data_export.json", "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            import subprocess
+            import sys
+            subprocess.run([sys.executable, "scratch/generate_crono_html.py"], capture_output=True)
+        except Exception as sync_err:
+            print(f"Erro ao salvar backups estáticos: {sync_err}")
+            
         return jsonify({"status": "success", "data": data})
         
     except Exception as e:
