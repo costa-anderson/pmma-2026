@@ -47,33 +47,11 @@
                 </a>
                 <a href="#" class="menu-item" data-tab="revisao">
                     <i class="fa-solid fa-rotate-left"></i>
-                    <span>Revisão Semanal</span>
-                </a>
-                <div class="menu-divider" style="height: 1px; background: rgba(255, 255, 255, 0.08); margin: 0.75rem 0.5rem;"></div>
-                <div class="menu-section-title" style="font-size: 0.7rem; color: var(--gold2); padding: 0.25rem 1.2rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.8px; opacity: 0.8;">Simulados Interativos</div>
-                <a href="SIMULADO_INTERATIVO_50_QUESTOES_ESTATUTO_PMMA_ATUALIZADO_2026.html" class="menu-item" target="_blank">
-                    <i class="fa-solid fa-clipboard-question"></i>
-                    <span>Simulado Estatuto</span>
-                </a>
-                <a href="SIMULADO_INTERATIVO_50_QUESTOES_LEI_14751_2023.html" class="menu-item" target="_blank">
-                    <i class="fa-solid fa-clipboard-question"></i>
-                    <span>Simulado L. Orgânica</span>
-                </a>
-                <a href="SIMULADO_INTERATIVO_50_QUESTOES_LEI_12896_2026.html" class="menu-item" target="_blank">
-                    <i class="fa-solid fa-clipboard-question"></i>
-                    <span>Simulado LOB</span>
+                    <span>Revisão Inteligente (SRS)</span>
                 </a>
             </nav>
             
-            <div class="sidebar-footer" style="display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 12px 16px;">
-                <div class="sync-badge synced" id="sync-status" style="flex: 1; margin: 0;">
-                    <i class="fa-solid fa-file-invoice"></i>
-                    <span id="sync-text">Plano Ativo (V2)</span>
-                </div>
-                <button id="btn-config-sheets" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px 8px; font-size: 1rem; display: flex; align-items: center; justify-content: center;" title="Configurar Planilha do Google">
-                    <i class="fa-solid fa-gear"></i>
-                </button>
-            </div>
+
         </aside>
 
         <!-- Área de Conteúdo -->
@@ -132,6 +110,14 @@
                                 <span class="metric-trend" id="val-edital-ratio">0 de 0 tópicos</span>
                             </div>
                         </div>
+                        <div class="metric-card" id="hot-topics-card-prog">
+                            <div class="card-icon red"><i class="fa-solid fa-fire"></i></div>
+                            <div class="card-info">
+                                <h3>Temas Quentes (🔥)</h3>
+                                <span class="metric-value" style="color: #FF5A5F;">0.0%</span>
+                                <span class="metric-trend">0 de 0 temas quentes</span>
+                            </div>
+                        </div>
                         <div class="metric-card">
                             <div class="card-icon red"><i class="fa-solid fa-medal"></i></div>
                             <div class="card-info">
@@ -163,9 +149,10 @@
                                 <div class="card-header">
                                     <h3><i class="fa-solid fa-keyboard"></i> Registro Rápido</h3>
                                 </div>
-                                <div class="card-body" style="display: flex; gap: 1rem;">
-                                    <button class="btn btn-primary" id="btn-quick-study"><i class="fa-solid fa-plus"></i> Estudo</button>
-                                    <button class="btn" id="btn-quick-simulado"><i class="fa-solid fa-pen-ruler"></i> Simulado</button>
+                                <div class="card-body" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                    <button class="btn btn-primary" id="btn-quick-study"><i class="fa-solid fa-book"></i> Estudo Diário</button>
+                                    <button class="btn" id="btn-quick-simulado-lote"><i class="fa-solid fa-layer-group"></i> Questões por Tema</button>
+                                    <button class="btn" id="btn-quick-simulado"><i class="fa-solid fa-scroll"></i> Simulado Geral</button>
                                     <button class="btn" id="btn-quick-taf"><i class="fa-solid fa-dumbbell"></i> Treino/TAF</button>
                                 </div>
                             </div>
@@ -247,9 +234,12 @@
                         <!-- Coluna 1: Simulados -->
                         <div class="desempenho-col">
                             <div class="panel-card" style="margin-bottom: 1.5rem;">
-                                <div class="card-header">
+                                <div class="card-header" style="flex-wrap: wrap; gap: 0.75rem;">
                                     <h3><i class="fa-solid fa-scroll"></i> Histórico de Simulados</h3>
-                                    <button class="btn btn-primary" id="btn-add-simulado-perf"><i class="fa-solid fa-plus"></i> Novo</button>
+                                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                        <button class="btn btn-primary" id="btn-add-simulado-lote-perf"><i class="fa-solid fa-layer-group"></i> Reg. por Tema</button>
+                                        <button class="btn" id="btn-add-simulado-perf"><i class="fa-solid fa-plus"></i> Simulado Geral</button>
+                                    </div>
                                 </div>
                                 <div class="table-container">
                                     <table class="data-table" id="simulados-table">
@@ -261,6 +251,7 @@
                                                 <th>Específicos (P2)</th>
                                                 <th>Nota Final</th>
                                                 <th>Tempo</th>
+                                                <th style="width: 60px; text-align: center;">Ações</th>
                                             </tr>
                                         </thead>
                                         <tbody id="simulados-table-body">
@@ -277,6 +268,24 @@
                                 </div>
                                 <div class="chart-wrapper">
                                     <canvas id="chart-simulados-progress"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- Simulados de Leis Interativos -->
+                            <div class="panel-card" style="margin-top: 1.5rem;">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-clipboard-question"></i> Simulados Interativos de Legislação (🔥)</h3>
+                                </div>
+                                <div class="card-body" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <a href="SIMULADO_INTERATIVO_50_QUESTOES_ESTATUTO_PMMA_ATUALIZADO_2026.html" target="_blank" class="btn" style="width: 100%; justify-content: flex-start; background: rgba(255,255,255,0.02); border: 1px solid var(--border-standard); padding: 0.75rem 1rem; text-decoration: none; color: var(--text-primary);">
+                                        <i class="fa-solid fa-file-shield" style="color: var(--accent); font-size: 1.1rem; margin-right: 0.5rem;"></i> Simulado do Estatuto PMMA (50 Q)
+                                    </a>
+                                    <a href="SIMULADO_INTERATIVO_50_QUESTOES_LEI_14751_2023.html" target="_blank" class="btn" style="width: 100%; justify-content: flex-start; background: rgba(255,255,255,0.02); border: 1px solid var(--border-standard); padding: 0.75rem 1rem; text-decoration: none; color: var(--text-primary);">
+                                        <i class="fa-solid fa-scale-balanced" style="color: var(--accent); font-size: 1.1rem; margin-right: 0.5rem;"></i> Simulado da Lei Orgânica (50 Q)
+                                    </a>
+                                    <a href="SIMULADO_INTERATIVO_50_QUESTOES_LEI_12896_2026.html" target="_blank" class="btn" style="width: 100%; justify-content: flex-start; background: rgba(255,255,255,0.02); border: 1px solid var(--border-standard); padding: 0.75rem 1rem; text-decoration: none; color: var(--text-primary);">
+                                        <i class="fa-solid fa-gavel" style="color: var(--accent); font-size: 1.1rem; margin-right: 0.5rem;"></i> Simulado da LOB PMMA (50 Q)
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -321,212 +330,52 @@
                     </div>
                 </section>
 
-                <!-- ABA 5: REVISÃO SEMANAL -->
+                <!-- ABA 5: REVISÃO INTELIGENTE (SRS) -->
                 <section id="tab-revisao" class="tab-pane">
-                    <!-- 1. TELA DE CONFIGURAÇÃO DA REVISÃO -->
-                    <div id="revisao-setup-screen" class="revisao-screen">
-                        <div class="dashboard-layout" style="grid-template-columns: 1fr 320px; gap: 1.5rem;">
-                            <!-- Esquerda: Seleção de Temas -->
-                            <div class="panel-card">
-                                <div class="card-header" style="justify-content: space-between;">
-                                    <h3><i class="fa-solid fa-list-check"></i> Selecione os Temas para Revisão</h3>
-                                    <div style="display: flex; gap: 0.5rem;">
-                                        <button class="btn btn-secondary btn-sm" id="revisao-select-all-btn">Todos</button>
-                                        <button class="btn btn-secondary btn-sm" id="revisao-clear-all-btn">Nenhum</button>
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <div class="form-group">
-                                        <label for="revisao-week-select">Semana do Cronograma</label>
-                                        <select id="revisao-week-select" class="form-input" style="width: 100%; max-width: 300px;">
-                                            <option value="">Carregando semanas...</option>
-                                        </select>
-                                    </div>
-                                    <div id="revisao-topics-container" style="margin-top: 1.5rem;">
-                                        <p style="color: var(--text-muted); font-size: 0.9rem;">Selecione uma semana para listar os temas do edital correspondentes.</p>
-                                        <div id="revisao-topics-list" class="revisao-checklist">
-                                            <!-- Carregado via JS -->
-                                        </div>
-                                    </div>
-                                </div>
+                    <div class="srs-dashboard">
+                        <div class="srs-summary-bar" style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <div class="panel-card" style="flex: 1; text-align: center; padding: 1.25rem;">
+                                <h4 style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0;">🔴 Urgente / Atrasado</h4>
+                                <span id="srs-count-atrasados" style="font-size: 2.2rem; font-weight: 800; color: #FF5A5F; font-family: 'Outfit';">0</span>
                             </div>
-
-                            <!-- Direita: Opções do Simulado -->
-                            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                                <!-- Botão de Retomada se houver simulado pausado -->
-                                <div id="revisao-resume-card" class="panel-card" style="display: none; border: 1px dashed var(--accent); background: rgba(56, 189, 248, 0.05);">
-                                    <div class="card-body" style="text-align: center; padding: 1.5rem;">
-                                        <h4 style="color: var(--accent); margin-bottom: 0.5rem;"><i class="fa-solid fa-pause"></i> Simulado Pausado</h4>
-                                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;" id="revisao-resume-info">Você possui uma revisão pausada de X questões.</p>
-                                        <button class="btn btn-primary" id="revisao-resume-btn" style="width: 100%;">Retomar Simulado</button>
-                                    </div>
-                                </div>
-
-                                <div class="panel-card">
-                                    <div class="card-header">
-                                        <h3><i class="fa-solid fa-sliders"></i> Ajustes da Revisão</h3>
-                                    </div>
-                                    <div class="card-body" style="display: flex; flex-direction: column; gap: 1.2rem;">
-                                        <div class="form-group" style="background: rgba(216,176,76,0.05); padding: 8px 12px; border-left: 2px solid var(--accent); border-radius: 4px;">
-                                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.4;">
-                                                <i class="fa-solid fa-circle-info"></i> Defina a quantidade de questões desejada para cada tema na lista ao lado.
-                                            </p>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="revisao-mode-select">Modo de Resolução</label>
-                                            <select id="revisao-mode-select" class="form-input" style="width: 100%;">
-                                                <option value="estudo" selected>Modo Estudo (Gabarito na Hora)</option>
-                                                <option value="simulado">Modo Simulado (Gabarito no Final)</option>
-                                            </select>
-                                        </div>
-
-                                        <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
-                                            <input type="checkbox" id="revisao-cebraspe-only" style="width: auto; cursor: pointer;">
-                                            <label for="revisao-cebraspe-only" style="cursor: pointer; margin-bottom: 0;">Apenas estilo CEBRASPE</label>
-                                        </div>
-
-                                        <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                            <input type="checkbox" id="revisao-errors-only" style="width: auto; cursor: pointer;">
-                                            <label for="revisao-errors-only" style="cursor: pointer; margin-bottom: 0; color: var(--danger);">Focar em Questões Erradas</label>
-                                        </div>
-
-                                        <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                                            <input type="checkbox" id="revisao-exclude-answered" style="width: auto; cursor: pointer;" checked>
-                                            <label for="revisao-exclude-answered" style="cursor: pointer; margin-bottom: 0;">Excluir questões já respondidas</label>
-                                        </div>
-
-                                        <button class="btn btn-primary" id="revisao-start-btn" style="width: 100%; margin-top: 1rem; padding: 1rem;">
-                                            <i class="fa-solid fa-play"></i> Iniciar Revisão
-                                        </button>
-                                    </div>
-                                </div>
+                            <div class="panel-card" style="flex: 1; text-align: center; padding: 1.25rem;">
+                                <h4 style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0;">🟡 Vence Hoje</h4>
+                                <span id="srs-count-hoje" style="font-size: 2.2rem; font-weight: 800; color: #FFC107; font-family: 'Outfit';">0</span>
+                            </div>
+                            <div class="panel-card" style="flex: 1; text-align: center; padding: 1.25rem;">
+                                <h4 style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0;">🟢 Em Dia</h4>
+                                <span id="srs-count-emdia" style="font-size: 2.2rem; font-weight: 800; color: #10B981; font-family: 'Outfit';">0</span>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- 2. TELA DE EXECUÇÃO DO SIMULADO (QUIZ) -->
-                    <div id="revisao-quiz-screen" class="revisao-screen" style="display: none;">
-                        <div class="panel-card" style="max-width: 800px; margin: 0 auto;">
-                            <div class="card-header" style="justify-content: space-between;">
-                                <span id="revisao-quiz-progress" style="font-weight: 600; color: var(--accent);">Questão 1 de 10</span>
-                                <div style="display: flex; align-items: center; gap: 1rem;">
-                                    <div id="revisao-quiz-timer" style="font-family: monospace; font-size: 1.1rem; color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 0.25rem 0.6rem; border-radius: 4px;">00:00</div>
-                                    <button class="btn btn-secondary btn-sm" id="revisao-quiz-pause-btn"><i class="fa-solid fa-pause"></i> Pausar</button>
+                        <div class="srs-columns" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; align-items: start;">
+                            <!-- Coluna Atrasados -->
+                            <div class="panel-card srs-column">
+                                <div class="card-header" style="border-bottom: 2px solid #FF5A5F; padding-bottom: 0.75rem;">
+                                    <h3 style="color: #FF5A5F; margin: 0;"><i class="fa-solid fa-triangle-exclamation"></i> Urgente / Atrasado</h3>
                                 </div>
-                            </div>
-                            <div class="card-body">
-                                <!-- Tags / Metadados ocultos antes de responder -->
-                                <div id="revisao-quiz-meta" class="revisao-meta-tags" style="display: none; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-                                    <!-- Carregado via JS -->
-                                </div>
-
-                                <!-- Matéria mostrada no início -->
-                                <div id="revisao-quiz-subject-header" style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.8px; margin-bottom: 1rem;">
-                                    Carregando matéria...
-                                </div>
-
-                                <!-- Corpo da questão -->
-                                <div class="revisao-question-body" style="font-size: 1.05rem; line-height: 1.6; margin-bottom: 2rem;">
-                                    <!-- Texto associado / Contexto se houver -->
-                                    <div id="revisao-quiz-text-associated" class="revisao-text-box" style="display: none; margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.02); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 0.95rem; color: var(--text-secondary);"></div>
-                                    
-                                    <!-- Assertiva principal -->
-                                    <div id="revisao-quiz-statement">Carregando enunciado da questão...</div>
-                                </div>
-
-                                <!-- Ações (Certo / Errado) -->
-                                <div id="revisao-quiz-actions" class="revisao-actions-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-                                    <button class="btn btn-success" id="revisao-btn-certo" style="padding: 1rem; font-size: 1.1rem; font-weight: 700;">Certo</button>
-                                    <button class="btn btn-danger" id="revisao-btn-errado" style="padding: 1rem; font-size: 1.1rem; font-weight: 700;">Errado</button>
-                                </div>
-
-                                <!-- Opções de Múltipla Escolha (a, b, c, d, e) -->
-                                <div id="revisao-quiz-options" style="display: none; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
-                                    <!-- Carregado dinamicamente via JS -->
-                                </div>
-
-                                <!-- Feedback e Comentários (Ocultado por padrão) -->
-                                <div id="revisao-quiz-feedback" class="revisao-feedback-panel" style="display: none; border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; border: 1px solid var(--border-standard);">
-                                    <h4 id="revisao-feedback-status" style="margin-bottom: 0.5rem; font-size: 1.1rem;">✅ Você Acertou!</h4>
-                                    <div style="font-size: 0.95rem; margin-bottom: 0.5rem;">
-                                        <strong>Gabarito:</strong> <span id="revisao-feedback-answer" style="text-transform: uppercase;">Certo</span>
-                                    </div>
-                                    <p id="revisao-feedback-comment" style="color: var(--text-secondary); line-height: 1.5; font-size: 0.95rem; margin-bottom: 1rem;">Comentários...</p>
-                                    
-                                    <!-- Pegadinha alerta -->
-                                    <div id="revisao-feedback-trap" class="revisao-trap-box" style="display: none; margin-top: 0.8rem; padding: 0.75rem; background: rgba(245, 158, 11, 0.08); border-left: 3px solid var(--warning); border-radius: 4px; color: #FFE08A; font-size: 0.9rem;">
-                                        <strong>⚠️ Fique Atento (Pegadinha!):</strong> <span id="revisao-feedback-trap-text"></span>
-                                    </div>
-                                </div>
-
-                                <!-- Próxima Questão -->
-                                <div id="revisao-quiz-nav" style="display: none; justify-content: flex-end;">
-                                    <button class="btn btn-primary" id="revisao-btn-next" style="padding: 0.75rem 2rem;">Avançar <i class="fa-solid fa-arrow-right"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 3. TELA DE RELATÓRIO DE RESULTADOS -->
-                    <div id="revisao-result-screen" class="revisao-screen" style="display: none;">
-                        <div style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
-                            <!-- Resumo das métricas -->
-                            <div class="panel-card">
-                                <div class="card-header" style="justify-content: center;">
-                                    <h2 style="color: var(--accent);"><i class="fa-solid fa-medal"></i> Resultados da Revisão</h2>
-                                </div>
-                                <div class="card-body" style="padding: 2rem;">
-                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; text-align: center; margin-bottom: 2rem;">
-                                        <div>
-                                            <span style="font-size: 0.85rem; color: var(--text-secondary); display: block; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Questões</span>
-                                            <span id="revisao-res-total" style="font-size: 2.2rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-primary);">0</span>
-                                        </div>
-                                        <div>
-                                            <span style="font-size: 0.85rem; color: var(--text-secondary); display: block; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Acertos</span>
-                                            <span id="revisao-res-correct" style="font-size: 2.2rem; font-weight: 800; font-family: 'Outfit'; color: var(--success);">0</span>
-                                        </div>
-                                        <div>
-                                            <span style="font-size: 0.85rem; color: var(--text-secondary); display: block; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Aproveitamento</span>
-                                            <span id="revisao-res-accuracy" style="font-size: 2.2rem; font-weight: 800; font-family: 'Outfit'; color: var(--accent);">0.0%</span>
-                                        </div>
-                                        <div>
-                                            <span style="font-size: 0.85rem; color: var(--text-secondary); display: block; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Tempo Total</span>
-                                            <span id="revisao-res-time" style="font-size: 2.2rem; font-weight: 800; font-family: 'Outfit'; color: var(--warning);">00:00</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Configuração de salvamento -->
-                                    <div style="border-top: 1px solid var(--border-standard); padding-top: 1.5rem; margin-bottom: 2rem;">
-                                        <h4 style="margin-bottom: 1rem; font-size: 1rem;">O que fazer com os resultados?</h4>
-                                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                            <div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                                <input type="checkbox" id="revisao-save-crono" checked style="width: auto; cursor: pointer;">
-                                                <label for="revisao-save-crono" style="cursor: pointer; margin-bottom: 0; font-size: 0.95rem;">Atualizar o progresso de estudos no meu Cronograma</label>
-                                            </div>
-                                            <div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                                <input type="checkbox" id="revisao-save-simulado" style="width: auto; cursor: pointer;">
-                                                <label for="revisao-save-simulado" style="cursor: pointer; margin-bottom: 0; font-size: 0.95rem;">Gravar esta revisão como um teste no meu Histórico de Simulados</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div style="display: flex; justify-content: space-between; gap: 1rem;">
-                                        <button class="btn btn-secondary" id="revisao-btn-abort" style="padding: 0.85rem 1.5rem;"><i class="fa-solid fa-xmark"></i> Descartar</button>
-                                        <button class="btn btn-primary" id="revisao-btn-save-results" style="padding: 0.85rem 2.5rem;"><i class="fa-solid fa-circle-check"></i> Gravar Progresso</button>
-                                    </div>
+                                <div class="card-body srs-card-list" id="srs-col-atrasados" style="display: flex; flex-direction: column; gap: 1rem; padding: 1rem 0; max-height: 500px; overflow-y: auto;">
+                                    <!-- Cards via JS -->
                                 </div>
                             </div>
 
-                            <!-- Listagem de Revisão de Questões (Especialmente no modo simulado) -->
-                            <div class="panel-card">
-                                <div class="card-header">
-                                    <h3><i class="fa-solid fa-magnifying-glass-chart"></i> Detalhes da Revisão da Prova</h3>
+                            <!-- Coluna Hoje -->
+                            <div class="panel-card srs-column">
+                                <div class="card-header" style="border-bottom: 2px solid #FFC107; padding-bottom: 0.75rem;">
+                                    <h3 style="color: #FFC107; margin: 0;"><i class="fa-solid fa-clock"></i> Vence Hoje</h3>
                                 </div>
-                                <div class="card-body">
-                                    <div id="revisao-review-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
-                                        <!-- Carregado via JS -->
-                                    </div>
+                                <div class="card-body srs-card-list" id="srs-col-hoje" style="display: flex; flex-direction: column; gap: 1rem; padding: 1rem 0; max-height: 500px; overflow-y: auto;">
+                                    <!-- Cards via JS -->
+                                </div>
+                            </div>
+
+                            <!-- Coluna Em Dia -->
+                            <div class="panel-card srs-column">
+                                <div class="card-header" style="border-bottom: 2px solid #10B981; padding-bottom: 0.75rem;">
+                                    <h3 style="color: #10B981; margin: 0;"><i class="fa-solid fa-circle-check"></i> Em Dia</h3>
+                                </div>
+                                <div class="card-body srs-card-list" id="srs-col-emdia" style="display: flex; flex-direction: column; gap: 1rem; padding: 1rem 0; max-height: 500px; overflow-y: auto;">
+                                    <!-- Cards via JS -->
                                 </div>
                             </div>
                         </div>
@@ -603,11 +452,53 @@
         </div>
     </div>
 
-    <!-- MODAL 2: NOVO SIMULADO -->
-    <div class="modal" id="modal-log-simulado">
-        <div class="modal-content">
+    <!-- MODAL 2A: REGISTRO DE SIMULADO / REVISÃO EM LOTE (POR TEMA) -->
+    <div class="modal" id="modal-log-simulado-lote">
+        <div class="modal-content" style="max-width: 850px; width: 95%; max-height: 85vh; overflow-y: auto;">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-scroll"></i> Registrar Novo Simulado</h3>
+                <h3><i class="fa-solid fa-layer-group"></i> Registrar Desempenho por Tema (Lote)</h3>
+                <button class="close-btn" id="close-modal-simulado-lote">&times;</button>
+            </div>
+            
+            <form id="form-simulado-lote-log">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-sim-lote-date">Data do Registro</label>
+                        <input type="date" id="form-sim-lote-date" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-sim-lote-week">Selecione a Semana</label>
+                        <select id="form-sim-lote-week" class="form-input" onchange="loadSimuladoWeekTopics(this.value)" required>
+                            <option value="">-- Selecione a Semana --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.75rem; gap: 0.5rem; flex-wrap: wrap;">
+                        <span style="margin-right: auto; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">Selecione os temas estudados/testados e insira os dados:</span>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllLoteCheckboxes(true)" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 4px;">Selecionar Todos</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllLoteCheckboxes(false)" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 4px;">Desmarcar Todos</button>
+                    </div>
+                    
+                    <div id="sim-lote-topics-container" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 420px; overflow-y: auto; padding: 10px; border: 1px solid var(--border-standard); border-radius: 8px; background: rgba(0,0,0,0.2);">
+                        <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin: 2rem 0;">Selecione uma semana acima.</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn" id="btn-cancel-simulado-lote">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar Lote</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2B: NOTA GERAL DE SIMULADO COMPLETO -->
+    <div class="modal" id="modal-log-simulado">
+        <div class="modal-content" style="max-width: 500px; width: 95%;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-scroll"></i> Registrar Simulado Geral</h3>
                 <button class="close-btn" id="close-modal-simulado">&times;</button>
             </div>
             <form id="form-simulado-log">
@@ -706,6 +597,58 @@
         </div>
     </div>
 
+    <!-- MODAL 5: REGISTRO DE REVISÃO (SRS) -->
+    <div class="modal" id="modal-log-srs">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-rotate-left"></i> Registrar Revisão Espaçada</h3>
+                <button class="close-btn" onclick="closeModal('modal-log-srs')">&times;</button>
+            </div>
+            <form id="form-srs-log">
+                <div class="form-group">
+                    <label>Matéria</label>
+                    <input type="text" id="form-srs-subject" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Tópico / Tema</label>
+                    <input type="text" id="form-srs-topic" class="form-input" readonly>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-srs-date">Data da Revisão</label>
+                        <input type="date" id="form-srs-date" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-srs-duration">Tempo de Revisão (min)</label>
+                        <input type="number" id="form-srs-duration" class="form-input" min="0" value="20" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-srs-questions">Questões Feitas</label>
+                        <input type="number" id="form-srs-questions" class="form-input" min="0" value="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-srs-correct">Acertos</label>
+                        <input type="number" id="form-srs-correct" class="form-input" min="0" value="8" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="form-srs-notes">Observações / Anotações</label>
+                    <input type="text" id="form-srs-notes" class="form-input" value="Revisão Espaçada Feita">
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn" onclick="closeModal('modal-log-srs')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Revisão</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL 4: CONFIGURAÇÃO DO GOOGLE SHEETS -->
     <div class="modal" id="modal-config-sheets">
         <div class="modal-content">
@@ -729,6 +672,12 @@
     </div>
 
     <!-- Script de Lógica -->
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/cronograma.js"></script>
+    <script src="js/edital.js"></script>
+    <script src="js/srs.js"></script>
+    <script src="js/desempenho.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
